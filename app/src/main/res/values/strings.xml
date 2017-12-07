@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">IcenLibsDemo</string>
+    <string name="demo_ble_entry">Ble Demo</string>
+</resources>

@@ -1,0 +1,16 @@
+syntax = "proto3";
+option java_package = "com.icen.blelibrary.config";
+option java_outer_classname = "ConnectBleDevice";
+
+message BleDeviceMessage {
+    string device_mac = 1;
+    string device_name = 2;
+}
+
+message BleBroadcastRecordMessage {
+    string device_mac = 1;
+    string device_name = 2;
+    string device_class = 3;
+    bytes broadcast_content = 4;
+}
+
