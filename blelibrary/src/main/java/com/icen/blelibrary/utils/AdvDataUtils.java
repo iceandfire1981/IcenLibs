@@ -120,41 +120,62 @@ public final class AdvDataUtils {
                     current_data.setSimplePairingRandomizerR(adv_report_parse(BLE_GAP_AD_TYPE_SIMPLE_PAIRING_RANDOMIZER_R, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SECURITY_MANAGER_TK_VALUE:
-
+                    current_data.setSecurityManagerTKValue(adv_report_parse(BLE_GAP_AD_TYPE_SECURITY_MANAGER_TK_VALUE, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SECURITY_MANAGER_OOB_FLAGS:
+                    current_data.setSecurityManagerOOBFlags(adv_report_parse(BLE_GAP_AD_TYPE_SECURITY_MANAGER_OOB_FLAGS, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SLAVE_CONNECTION_INTERVAL_RANGE:
+                    current_data.setSlaveConnectionInternalRange(adv_report_parse(BLE_GAP_AD_TYPE_SLAVE_CONNECTION_INTERVAL_RANGE, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SOLICITED_SERVICE_UUIDS_16BIT:
+                    current_data.addUUID(SOLICITED_SERVICE_UUIDS_16,
+                            adv_report_parse(BLE_GAP_AD_TYPE_SOLICITED_SERVICE_UUIDS_16BIT, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SOLICITED_SERVICE_UUIDS_128BIT:
+                    current_data.addUUID(SOLICITED_SERVICE_UUIDS_128,
+                            adv_report_parse(BLE_GAP_AD_TYPE_SOLICITED_SERVICE_UUIDS_128BIT, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SERVICE_DATA:
+                    current_data.setServiceData(adv_report_parse(BLE_GAP_AD_TYPE_SERVICE_DATA, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_PUBLIC_TARGET_ADDRESS:
+                    current_data.setPublicTargetAddress(adv_report_parse(BLE_GAP_AD_TYPE_PUBLIC_TARGET_ADDRESS, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_RANDOM_TARGET_ADDRESS:
+                    current_data.setRandomTargetAddress(adv_report_parse(BLE_GAP_AD_TYPE_RANDOM_TARGET_ADDRESS, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_APPEARANCE:
+                    current_data.setAppearance(adv_report_parse(BLE_GAP_AD_TYPE_APPEARANCE, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_ADVERTISING_INTERVAL:
+                    current_data.setAdvertisintInternal(adv_report_parse(BLE_GAP_AD_TYPE_ADVERTISING_INTERVAL, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_LE_BLUETOOTH_DEVICE_ADDRESS:
+                    current_data.setLEBluetoothDeviceAddress(adv_report_parse(BLE_GAP_AD_TYPE_LE_BLUETOOTH_DEVICE_ADDRESS, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_LE_ROLE:
+                    current_data.setLERole(adv_report_parse(BLE_GAP_AD_TYPE_LE_ROLE, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SIMPLE_PAIRING_HASH_C256:
+                    current_data.setSimplePairingHashC256(adv_report_parse(BLE_GAP_AD_TYPE_SIMPLE_PAIRING_HASH_C256, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SIMPLE_PAIRING_RANDOMIZER_R256:
+                    current_data.setSimplePairingRANDOMIZERC256(adv_report_parse(BLE_GAP_AD_TYPE_SIMPLE_PAIRING_RANDOMIZER_R256, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SERVICE_DATA_32BIT_UUID:
+                    current_data.addUUID(SERVICE_DATA_UUID_TYPE_32,
+                            adv_report_parse(BLE_GAP_AD_TYPE_SERVICE_DATA_32BIT_UUID, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_SERVICE_DATA_128BIT_UUID:
+                    current_data.addUUID(SERVICE_DATA_UUID_TYPE_128,
+                            adv_report_parse(BLE_GAP_AD_TYPE_SERVICE_DATA_128BIT_UUID, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_3D_INFORMATION_DATA:
+                    current_data.setServiceData(adv_report_parse(BLE_GAP_AD_TYPE_3D_INFORMATION_DATA, adv_data));
                     break;
                 case BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA:
+                    current_data.setManufacturerSpecificData(adv_report_parse(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA, adv_data));
                     break;
             }
             loop_index = loop_index + adv_data_length + 1;
