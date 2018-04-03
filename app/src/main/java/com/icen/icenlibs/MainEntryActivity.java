@@ -23,6 +23,9 @@ public class MainEntryActivity extends AppCompatActivity {
         switch (click_view.getId()){
             case R.id.entry_ble:
                 break;
+            case R.id.entry_ble_config:
+                
+                break;
             default:
                 break;
         }

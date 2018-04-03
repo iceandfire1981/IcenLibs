@@ -12,4 +12,10 @@
         android:layout_height="wrap_content"
         android:text="@string/demo_ble_entry"
         android:onClick="onClick"/>
+    <Button
+        android:id="@+id/entry_ble_config"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/demo_config_ble_entry"
+        android:onClick="onClick"/>
 </LinearLayout>
