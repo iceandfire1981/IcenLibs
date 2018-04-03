@@ -293,6 +293,9 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean startDiscoveryDevice() throws RemoteException {
+            mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
+            mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
+
             boolean is_success = false;
             if (null != mBleAdapter) {
                 mCurrentDeviceMap = new HashMap<>();
