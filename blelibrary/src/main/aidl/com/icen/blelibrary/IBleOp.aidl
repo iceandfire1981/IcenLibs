@@ -5,8 +5,11 @@ import android.os.Bundle;
 import com.icen.blelibrary.IBleOpCallback;
 
 interface IBleOp {
+    Bundle[] getDeviceInfo();
     Bundle[] getServices();
     Bundle[] getCharacteristic(String service_uuid);
+    Bundle   getDeviceInfoByAddress(String device_mac);
+    Bundle[] getDeviceInfoByName(String device_name);
 
     boolean leIsEnable();
     boolean bleSwitcher(boolean enabled);

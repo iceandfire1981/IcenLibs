@@ -29,22 +29,57 @@ public final class BleLibsConfig {
 
     private static final String ACTION_START_BLE_SERVICE = "com.icen.blelibrary.START_BLE_SERVICE";
 
-    private static final boolean ENABLED_AUTO_CONNECT = true;//是否自动连接（默认为自动连接）
-    private static final long DEFAULT_SCAN_OVERTIME = 5000L;
+    private static final boolean DEFAULT_ENABLED_AUTO_CONNECT = true;//是否自动连接（默认为自动连接）
+    private static final long    DEFAULT_SCAN_OVERTIME = 5000L;
+    private static final String  BLE_DEVICE_SPILT = "|";
+    private static final String  BLE_DEVICE_INFO_SPILT = "%";
 
+    /**
+     * BLE管理服务配置文件：文件名为ble_config
+     */
     private static final String BLE_CONFIG_FILE_NAME = "ble_config";
-    private static final String BLE_CONFIG_AUTO_CONNECT = "ble_config_a_connect";
+    /**
+     * BLE管理服务配置文件：是否自动重连已经成功连接的最后一个BLE设备。
+     * 默认值：true
+     */
+    private static final String BLE_CONFIG_AUTO_CONNECT = "ble_config_auto_connect";
+    /**
+     * BLE管理服务配置文件：设备扫描时间配置
+     * 默认值：5秒
+     */
     private static final String BLE_CONFIG_SCAN_TIMEOUT = "ble_config_scan_overtime";
+    /**
+     * 成功连接的设备列表
+     */
     private static final String BLE_CONFIG_DEVICE_LIST = "ble_config_device_list";
-    private static final String BLE_CONFIG_NOTIFICATION_UUID = "ble_config_n_uuid";
 
-    private static final String BLE_DEVICE_SPILT = "|";
-    private static final String BLE_DEVICE_INFO_SPILT = "%";
+    /**
+     * 广播数据消息配置：设备名称
+     */
+    public static final String BROADCAST_INFO_DEVICE_NAME = "device_name";
+    /**
+     * 广播数据消息配置：设备MAC地址
+     */
+    public static final String BROADCAST_INFO_DEVICE_ADDRESS = "device_mac";
+    /**
+     * 广播数据消息配置：设备类型
+     */
+    public static final String BROADCAST_INFO_DEVICE_CLASS = "device_class";
+    /**
+     * 广播数据消息配置：广播数据实体
+     */
+    public static final String BROADCAST_INFO_DEVICE_CONTENT = "device_content";
 
     public static final int SCAN_PROCESS_BEGIN = 1000;
     public static final int SCAN_PROCESS_SCANNING = SCAN_PROCESS_BEGIN + 1;
     public static final int SCAN_PROCESS_SCAN_END = SCAN_PROCESS_BEGIN + 2;
 
+    /**
+     * 启动BLE管理服务
+     * @param ctx                上下文
+     * @param service_connection 与管理服务连接的类
+     * @return  true：启动成功；false：启动失败
+     */
     public static final boolean startBleService(Context ctx, ServiceConnection service_connection) {
         Intent start_ble_service = new Intent(ACTION_START_BLE_SERVICE);
         start_ble_service.setComponent(new ComponentName(ctx, BleManagerService.class));
@@ -53,18 +88,33 @@ public final class BleLibsConfig {
         return false;
     }
 
+    /**
+     * 停止BLE管理服务
+     * @param ctx                上下文
+     * @param service_connection 与管理服务连接的类
+     */
     public static final void stopBleService(Context ctx, ServiceConnection service_connection) {
         ctx.unbindService(service_connection);
         BleLogUtils.outputUtilLog("BleLibsConfig::stopBleService=============");
     }
 
+    /**
+     * 获取系统配置：是否重新连接已经成功连接的设备
+     * @param ctx   上下文
+     * @return  true：需要自动连接，false：无需自动连接
+     */
     public static final boolean getAutoConnectInFile(Context ctx) {
         boolean is_auto_connect = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
-                .getBoolean(BLE_CONFIG_AUTO_CONNECT, ENABLED_AUTO_CONNECT);
+                .getBoolean(BLE_CONFIG_AUTO_CONNECT, DEFAULT_ENABLED_AUTO_CONNECT);
         BleLogUtils.outputUtilLog("BleLibsConfig::getAutoConnect= " + is_auto_connect);
         return is_auto_connect;
     }
 
+    /**
+     * 保存自动重连配置到配置文件中
+     * @param ctx              上下文
+     * @param is_auto_connect  重连标记
+     */
     public static final  void saveAutoConnectInFile(Context ctx, boolean is_auto_connect) {
         ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
                 .putBoolean(BLE_CONFIG_AUTO_CONNECT, is_auto_connect)
@@ -72,22 +122,11 @@ public final class BleLibsConfig {
         BleLogUtils.outputUtilLog("BleLibsConfig::saveAutoConnectInFile= " + is_auto_connect);
     }
 
-    public static final String getNotificationUUIDInFile(Context ctx) {
-        String notification_uuid = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
-                .getString(BLE_CONFIG_NOTIFICATION_UUID, "");
-        BleLogUtils.outputUtilLog("BleLibsConfig::getNotificationUUIDInFile= " + notification_uuid);
-        return notification_uuid;
-    }
-
-    public static final void setNotificationUUIDInFile(Context ctx, String current_uuid) {
-        if (!TextUtils.isEmpty(current_uuid)) {
-            ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
-                    .putString(BLE_CONFIG_NOTIFICATION_UUID, current_uuid)
-                    .commit();
-        }
-        BleLogUtils.outputUtilLog("BleLibsConfig::setNotificationUUIDInFile= " + current_uuid);
-    }
-
+    /**
+     * 获取扫描时间长度
+     * @param ctx 上下文
+     * @return  超时时长
+     */
     public static final long getScanOvertime(Context ctx) {
         long scan_overtime = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
                 .getLong(BLE_CONFIG_SCAN_TIMEOUT, DEFAULT_SCAN_OVERTIME);
@@ -95,6 +134,11 @@ public final class BleLibsConfig {
         return scan_overtime;
     }
 
+    /**
+     * 保存扫描设备时间长度
+     * @param ctx       上下文
+     * @param over_time 设置的扫描时长
+     */
     public static final void saveScanOvertime(Context ctx, long over_time){
         BleLogUtils.outputUtilLog("BleLibsConfig::saveScanOvertime= " + over_time);
         ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
@@ -102,6 +146,12 @@ public final class BleLibsConfig {
                 .commit();
     }
 
+    /**
+     * 保存前次连接的所有设备信息。列表形式
+     * @param ctx                 上下文
+     * @param current_device_name 设备名称
+     * @param current_device_mac  设备MAC地址
+     */
     public static final void saveDeviceInFile(Context ctx, String current_device_name, String current_device_mac) {
         if (!TextUtils.isEmpty(current_device_name) && !TextUtils.isEmpty(current_device_mac)) {
             HashMap<String, String> device_map = getDeviceListInFile(ctx);
@@ -118,53 +168,11 @@ public final class BleLibsConfig {
                 + " mac= " + current_device_mac);
     }
 
-    public static final void deleteDeviceByNameInfile(Context ctx, String current_device_name) {
-        if (!TextUtils.isEmpty(current_device_name)) {
-            HashMap<String, String> device_map = getDeviceListInFile(ctx);
-            if (null != device_map && device_map.size() > 0) {
-                Iterator<Map.Entry<String, String>> device_iterator = device_map.entrySet().iterator();
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, String> device_entry = device_iterator.next();
-                    String device_name = device_entry.getValue();
-                    BleLogUtils.outputUtilLog("BleLibsConfig::deleteDeviceByNameInfile::name " + current_device_name +
-                                            " source= " + device_name);
-                    if (current_device_name.equals(device_name)){
-                        device_map.remove(device_entry.getValue());
-                        break;
-                    }
-                }
-            }
-            mapToDeviceRecord(ctx, device_map);
-        }
-        BleLogUtils.outputUtilLog("BleLibsConfig::deleteDeviceByNameInfile::name " + current_device_name);
-    }
-
-    public static final void deleteDeviceByMacInfile(Context ctx, String current_device_mac) {
-        if (!TextUtils.isEmpty(current_device_mac)) {
-            HashMap<String, String> device_map = getDeviceListInFile(ctx);
-            if (null != device_map && device_map.size() > 0) {
-                Iterator<Map.Entry<String, String>> device_iterator = device_map.entrySet().iterator();
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, String> device_entry = device_iterator.next();
-                    String device_mac = device_entry.getKey();
-                    BleLogUtils.outputUtilLog("BleLibsConfig::deleteDeviceByMacInfile::mac " + current_device_mac +
-                            " source= " + device_mac);
-                    if (current_device_mac.equalsIgnoreCase(device_mac)){
-                        device_map.remove(device_mac);
-                        break;
-                    }
-                }
-            }
-            mapToDeviceRecord(ctx, device_map);
-        }
-        BleLogUtils.outputUtilLog("BleLibsConfig::deleteDeviceByMacInfile::name " + current_device_mac);
-    }
-
 
     /**
      * 生成设备列表
-     * 记录格式：device1%xxxx:xxxxx:xxxx:xxxx\device2%xxxx:xxxxx:xxxx:xxxx
-     * @param ctx
+     * 记录格式：device1%xxxx:xxxxx:xxxx:xxxx|device2%xxxx:xxxxx:xxxx:xxxx
+     * @param ctx 上下文
      * @return 设备列表MAC-NAME Map
      */
     public static final HashMap<String, String> getDeviceListInFile(Context ctx) {
@@ -187,6 +195,11 @@ public final class BleLibsConfig {
         }
     }
 
+    /**
+     * 生成
+     * @param ctx
+     * @param device_map
+     */
     private static final void mapToDeviceRecord(Context ctx, @NonNull  HashMap<String, String> device_map){
         int device_size = ((null != device_map) ? device_map.size() : -1);
         BleLogUtils.outputUtilLog("BleLibsConfig::mapToDeviceRecord= " + device_size);

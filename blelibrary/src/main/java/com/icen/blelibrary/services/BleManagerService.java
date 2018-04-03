@@ -168,13 +168,28 @@ public class BleManagerService extends Service {
     private class BleOpImpl extends IBleOp.Stub{
 
         @Override
-        public Bundle[] getServices() throws RemoteException {
+        public Bundle[] getDeviceInfo(){
             return new Bundle[0];
         }
 
         @Override
+        public Bundle[] getServices() throws RemoteException {
+            return null;
+        }
+
+        @Override
         public Bundle[] getCharacteristic(String service_uuid) throws RemoteException {
-            return new Bundle[0];
+            return null;
+        }
+
+        @Override
+        public Bundle   getDeviceInfoByAddress(String device_mac){
+            return null;
+        }
+
+        @Override
+        public Bundle[] getDeviceInfoByName(String device_name){
+            return null;
         }
 
         @Override
