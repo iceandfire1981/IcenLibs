@@ -34,6 +34,11 @@ public final class BleLibsConfig {
     private static final String  BLE_DEVICE_SPILT = "|";
     private static final String  BLE_DEVICE_INFO_SPILT = "%";
 
+    //扫描进度
+    public static final int      LE_SCAN_PROCESS_BEGIN = 0;
+    public static final int      LE_SCAN_PROCESS_DOING = LE_SCAN_PROCESS_BEGIN + 1;
+    public static final int      LE_SCAN_PROCESS_END = LE_SCAN_PROCESS_BEGIN + 2;
+
     /**
      * BLE管理服务配置文件：文件名为ble_config
      */
@@ -70,9 +75,6 @@ public final class BleLibsConfig {
      */
     public static final String BROADCAST_INFO_DEVICE_CONTENT = "device_content";
 
-    public static final int SCAN_PROCESS_BEGIN = 1000;
-    public static final int SCAN_PROCESS_SCANNING = SCAN_PROCESS_BEGIN + 1;
-    public static final int SCAN_PROCESS_SCAN_END = SCAN_PROCESS_BEGIN + 2;
 
     /**
      * 启动BLE管理服务

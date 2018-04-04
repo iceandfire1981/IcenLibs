@@ -1,20 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ble_demo_le_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.icen.icenlibs.BleDemoActivity">
 
-    <Button
-        android:id="@+id/ble_scan_button"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ble_demo_start_scan"/>
+        android:background="@android:color/holo_orange_light"
+        android:paddingBottom="20dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="20dp">
+
+        <TextView
+            android:id="@+id/ble_demo_le_switch_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="@string/ble_demo_switcher"
+            android:textSize="20dp" />
+
+        <Switch
+            android:id="@+id/ble_demo_le_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/ble_demo_le_switch_title" />
+    </RelativeLayout>
 
     <Button
-        android:id="@+id/ble_connect_button"
+        android:id="@+id/ble_demo_le_scan_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ble_demo_connect"/>
+        android:text="@string/ble_demo_start_scan" />
+
+    <Button
+        android:id="@+id/ble_demo_le_connect_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ble_demo_connect" />
 </LinearLayout>

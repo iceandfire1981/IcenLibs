@@ -70,7 +70,7 @@ public class BleManagerService extends Service {
 
             if (null != mBleOpCallback) {
                 try {
-                    mBleOpCallback.onDeviceScan(BleLibsConfig.SCAN_PROCESS_SCANNING, bluetoothDevice.getName(),
+                    mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_DOING, bluetoothDevice.getName(),
                             bluetoothDevice.getAddress(), bluetoothDevice.getClass().toString(), bytes);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -311,7 +311,7 @@ public class BleManagerService extends Service {
             BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::result= " + is_success);
             if (is_success){
                 if (null != mBleOpCallback) {
-                    mBleOpCallback.onDeviceScan(BleLibsConfig.SCAN_PROCESS_BEGIN, null, null, null,
+                    mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_BEGIN, null, null, null,
                             null);
                 }
                 //指定时间后停止扫描
@@ -340,7 +340,7 @@ public class BleManagerService extends Service {
 
             BleLogUtils.outputServiceLog("BleOpImpl::stopDiscoveryDevice=================");
             if (null != mBleOpCallback)
-                mBleOpCallback.onDeviceScan(BleLibsConfig.SCAN_PROCESS_SCAN_END, null, null, null,
+                mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_END, null, null, null,
                         null);
 
         }

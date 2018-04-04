@@ -30,8 +30,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     private Activity mContext;
     private IBleOp mBleOp;
 
+    private BleManagerCallBack mClientCallback;
+
     public BleManager(Activity ctx){
         mContext = ctx;
+        mClientCallback = null;
     }
 
     /**
@@ -39,7 +42,15 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return is_success: true：表示启动服务成功，false：表示启动服务失败
      */
     public boolean startManager(){
-        boolean is_success = BleLibsConfig.startBleService(mContext, this);
+        boolean is_success;
+        if (isReady()){
+            is_success = true;
+            if (null != mClientCallback)
+                mClientCallback.onInitialManager(is_success);
+        } else {
+            is_success = BleLibsConfig.startBleService(mContext, this);
+        }
+
         BleLogUtils.outputManagerLog("BleManager::startManager::is_success= " + is_success);
         return is_success;
     }
@@ -54,12 +65,22 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             try {
                 mBleOp.setBleOpCallback(null);
                 mBleOp.disconnect();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         mBleOp = null;
+        mClientCallback = null;
         BleLibsConfig.stopBleService(mContext, this);
+    }
+
+    /**
+     * 设置异步回调接口
+     * @param call_back
+     */
+    public void setManagerCallback(BleManagerCallBack call_back){
+        mClientCallback = call_back;
     }
 
     /**
@@ -76,6 +97,10 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_ready;
     }
 
+    /**
+     * 获取设备蓝牙状态
+     * @return true: 当前蓝牙开关已经开启；false：当前蓝牙开关已经关闭
+     */
     public boolean isLeEnabled(){
         boolean is_enabled = false;
         if (null != mBleOp) {
@@ -93,11 +118,17 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         boolean is_success = false;
         if (null != mBleOp) {
             try {
-                is_success = mBleOp.bleSwitcher(true);
+                if (!isLeEnabled())
+                    is_success = mBleOp.bleSwitcher(true);
+                else
+                    is_success = true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
+        if (null != mClientCallback)
+            mClientCallback.onLESwitch(true, is_success);
         BleLogUtils.outputManagerLog("BleManager::enableBle= " + is_success);
         return is_success;
     }
@@ -106,11 +137,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         boolean is_success = false;
         if (null != mBleOp) {
             try {
-                is_success = mBleOp.bleSwitcher(false);
+                if (isLeEnabled())
+                    is_success = mBleOp.bleSwitcher(false);
+                else
+                    is_success = true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        if (null != mClientCallback)
+            mClientCallback.onLESwitch(false, is_success);
         BleLogUtils.outputManagerLog("BleManager::disableBle= " + is_success);
         return is_success;
     }
@@ -141,12 +177,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         BleLogUtils.outputManagerLog("BleManager::onServiceConnected::cn= " + componentName);
         mBleOp = IBleOp.Stub.asInterface(iBinder);
+        if (null != mClientCallback)
+            mClientCallback.onInitialManager(true);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
         BleLogUtils.outputManagerLog("BleManager::onServiceDisconnected::cn= " + componentName);
         mBleOp = null;
+        if (null != mClientCallback)
+            mClientCallback.onInitialManager(false);
     }
     //-----------------------------------------implement ServiceConnection interface--------------------------------------//
 
@@ -157,6 +197,8 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         BleLogUtils.outputManagerLog("BleManager:onDeviceScan:name= " + device_name + " address= " + device_address +
                                      " class= " + device_class + " content= " + Arrays.toString(broadcast_content) +
                                     " scan_process= " + scan_process);
+        if (null != mClientCallback)
+            mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, broadcast_content);
 
     }
 
