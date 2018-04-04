@@ -2,4 +2,7 @@
     <string name="app_name">IcenLibsDemo</string>
     <string name="demo_ble_entry">Ble Demo</string>
     <string name="demo_config_ble_entry">Config BLE libs</string>
+
+    <string name="ble_demo_start_scan">开始扫描</string>
+    <string name="ble_demo_connect">连接</string>
 </resources>
