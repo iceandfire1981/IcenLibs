@@ -75,6 +75,11 @@ public final class BleLibsConfig {
      */
     public static final String BROADCAST_INFO_DEVICE_CONTENT = "device_content";
 
+    /**
+     * 广播数据消息配置：设备信号强度
+     */
+    public static final String BROADCAST_INFO_SIGNAL = "device_signal";
+
 
     /**
      * 启动BLE管理服务
@@ -198,7 +203,7 @@ public final class BleLibsConfig {
     }
 
     /**
-     * 生成
+     * 生成设备列表的记录
      * @param ctx
      * @param device_map
      */

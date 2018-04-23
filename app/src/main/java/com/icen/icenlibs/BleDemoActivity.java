@@ -1,5 +1,9 @@
 package com.icen.icenlibs;
 
+import android.content.pm.PackageInfo;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -10,19 +14,31 @@ import android.widget.Toast;
 
 import com.icen.blelibrary.BleManager;
 import com.icen.blelibrary.BleManagerCallBack;
-import com.icen.blelibrary.utils.BleLogUtils;
+import com.icen.blelibrary.config.BleLibsConfig;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class BleDemoActivity extends AppCompatActivity
         implements CompoundButton.OnCheckedChangeListener,
         View.OnClickListener,
+        ActivityCompat.OnRequestPermissionsResultCallback,
         BleManagerCallBack{
 
     private View mRootView;
     private Switch mSHLESwitch;
 
     private BleManager mBleManager;
+    private HashMap<String, Bundle> mDeviceListByName;
+    private HashMap<String, Bundle> mDeviceListByAddress;
+
+
+    private static String[] REQUEST_PERMISSION = new String[]{
+        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +52,15 @@ public class BleDemoActivity extends AppCompatActivity
         mRootView.setEnabled(false);
         mBleManager = new BleManager(this);
         mBleManager.setManagerCallback(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(this, REQUEST_PERMISSION, 1000);
+        }
     }
 
     @Override
@@ -106,5 +131,46 @@ public class BleDemoActivity extends AppCompatActivity
     public void onLEScan(int scan_process, String device_name, String device_class, String device_mac, byte[] broadcast_content) {
         AppLogUtils.outputActivityLog("BleDemoActivity::onLEScan::process= " + scan_process + " name= " + device_name +
                                 " class= " + device_class + " mac= " + device_mac + " content= " + Arrays.toString(broadcast_content));
+        if (BleLibsConfig.LE_SCAN_PROCESS_BEGIN == scan_process){
+            Toast.makeText(this, "LE Scan begin", Toast.LENGTH_LONG).show();
+            mDeviceListByName = null;
+            mDeviceListByName = new HashMap<>();
+
+            mDeviceListByAddress = null;
+            mDeviceListByAddress = new HashMap<>();
+
+        } else if (BleLibsConfig.LE_SCAN_PROCESS_DOING == scan_process) {
+            Toast.makeText(this, "LE Scan doing", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
+            Bundle[] device_list = mBleManager.getAllDevices();
+            if (null != device_list && device_list.length > 0) {
+                for (int index = 0; index < device_list.length; index ++) {
+                    Bundle current_device = device_list[index];
+                    String device_name_b = current_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
+                    String device_address_b = current_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS);
+                    mDeviceListByAddress.put(device_address_b, device_list[index]);
+                    mDeviceListByName.put(device_name_b, device_list[index]);
+                }
+
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        boolean is_all_success = false;
+        for (int index = 0; index < grantResults.length; index ++) {
+            if (grantResults[index] != PackageInfo.REQUESTED_PERMISSION_GRANTED) {
+                is_all_success = false;
+            }
+            is_all_success = true;
+        }
+
+        if (!is_all_success) {
+            Toast.makeText(this, "Request permission false", Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 }

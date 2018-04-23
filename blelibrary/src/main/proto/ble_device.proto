@@ -11,6 +11,7 @@ message BleBroadcastRecordMessage {
     string device_mac = 1;
     string device_name = 2;
     string device_class = 3;
-    bytes broadcast_content = 4;
+    int64    device_rssi = 4;
+    bytes broadcast_content = 5;
 }
 

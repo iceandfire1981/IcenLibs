@@ -4,6 +4,7 @@ package com.icen.blelibrary;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 
@@ -170,7 +171,21 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_success;
     }
 
-
+    /**
+     * 获取附近的BLE设备
+     * @return BLE设备列表
+     */
+    public Bundle[] getAllDevices(){
+        if (null != mBleOp){
+            try {
+                Bundle[] all_devices = mBleOp.getDeviceInfo();
+                return all_devices;
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 
     //-----------------------------------------implement ServiceConnection interface--------------------------------------//
     @Override

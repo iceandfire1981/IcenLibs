@@ -56,14 +56,15 @@ public class BleManagerService extends Service {
 
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
-        public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+        public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
             BleLogUtils.outputServiceLog("BleManagerService::onLeScan::mac= " + bluetoothDevice.getAddress() +
-                    " i= " + i + " content= " + ((null == bytes || bytes.length <= 0) ? "No Record" : Arrays.toString(bytes)));
+                    " rssi= " + rssi + " content= " + ((null == bytes || bytes.length <= 0) ? "No Record" : Arrays.toString(bytes)));
 
             ConnectBleDevice.BleBroadcastRecordMessage.Builder device_builder = ConnectBleDevice.BleBroadcastRecordMessage.newBuilder();
             device_builder.setDeviceName(bluetoothDevice.getName());
             device_builder.setDeviceMac(bluetoothDevice.getAddress().toLowerCase(Locale.getDefault()));
             device_builder.setDeviceClass(bluetoothDevice.getBluetoothClass().toString());
+            device_builder.setDeviceRssi(rssi);
             device_builder.setBroadcastContent(ByteString.copyFrom(bytes));
 
             mCurrentDeviceMap.put(bluetoothDevice.getAddress().toLowerCase(Locale.getDefault()), device_builder.build());

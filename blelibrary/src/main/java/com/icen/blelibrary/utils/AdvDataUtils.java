@@ -189,7 +189,7 @@ public final class AdvDataUtils {
      * @param adv_data  被解析数据
      * @return          指定类型的二进制值
      */
-    private static final byte[] adv_report_parse(short type, byte[] adv_data) {
+    public static final byte[] adv_report_parse(short type, byte[] adv_data) {
         int index = 0;
         int length;
 
