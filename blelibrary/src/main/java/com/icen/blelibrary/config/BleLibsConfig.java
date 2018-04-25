@@ -39,6 +39,14 @@ public final class BleLibsConfig {
     public static final int      LE_SCAN_PROCESS_DOING = LE_SCAN_PROCESS_BEGIN + 1;
     public static final int      LE_SCAN_PROCESS_END = LE_SCAN_PROCESS_BEGIN + 2;
 
+    //BLE服务(SERVICE)配置
+    public static final String   LE_SERVICE_UUID = "le_service_uuid";
+    public static final String   LE_SERVICE_NAME = "le_service_name";
+
+    //BLE特征（Characteristic）配置
+    public static final String   LE_CHARACTERISTIC_UUID = "le_characteristic_uuid";
+    public static final String   LE_CHARACTERISTIC_NAME = "le_characteristic_name";
+
     /**
      * BLE管理服务配置文件：文件名为ble_config
      */

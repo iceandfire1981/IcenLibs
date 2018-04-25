@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.protobuf.ByteString;
 import com.icen.blelibrary.IBleOp;
@@ -199,24 +200,49 @@ public class BleManagerService extends Service {
         }
 
         @Override
-        public Bundle   getDeviceInfoByAddress(String device_mac){
+        public Bundle[]   getDeviceInfoByAddress(String device_mac){
             if (null != mCurrentDeviceMap || mCurrentDeviceMap.size() > 0) {
-                Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
-                            (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
-                    String current_mac = entry.getValue().getDeviceMac();
-                    if (device_mac.equalsIgnoreCase(current_mac)){
+                if (!TextUtils.isEmpty(device_mac)) {
+                    Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
+                    while (device_iterator.hasNext()) {
+                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
+                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
+                        String current_mac = entry.getValue().getDeviceMac();
+                        if (device_mac.equalsIgnoreCase(current_mac)) {
+                            Bundle device_info = new Bundle();
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
+                            device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
+                            byte[] content_bytes = null;
+                            entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
+                            device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
+                            Bundle[] result_device_list = new Bundle[1];
+                            result_device_list[0] = device_info;
+                            return result_device_list;
+                        }
+                    }
+                } else {
+                    Bundle[] le_device_list = new Bundle[mCurrentDeviceMap.size()];
+                    int le_devices_index = 0;
+                    Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
+                    while (device_iterator.hasNext()) {
+                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
+                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
                         Bundle device_info = new Bundle();
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
+                        device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
                         byte[] content_bytes = null;
                         entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
                         device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
-                        return device_info;
+                        le_device_list[le_devices_index] = device_info;
+                        le_devices_index = le_devices_index + 1;
                     }
+                    return le_device_list;
                 }
+                return null;
             }
             return null;
         }
@@ -226,19 +252,36 @@ public class BleManagerService extends Service {
             ArrayList<Bundle> device_list = new ArrayList();
             if (null != mCurrentDeviceMap || mCurrentDeviceMap.size() > 0) {
                 Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
-                            (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
-                    String current_name = entry.getValue().getDeviceName();
-                    if (device_name.equalsIgnoreCase(current_name)){
+                if (TextUtils.isEmpty(device_name)){
+                    while (device_iterator.hasNext()) {
+                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
+                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
                         Bundle device_info = new Bundle();
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
+                        device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
                         byte[] content_bytes = null;
                         entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
                         device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
                         device_list.add(device_info);
+                    }
+                } else {
+                    while (device_iterator.hasNext()) {
+                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
+                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
+                        String current_name = entry.getValue().getDeviceName();
+                        if (device_name.equalsIgnoreCase(current_name)){
+                            Bundle device_info = new Bundle();
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
+                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
+                            device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
+                            byte[] content_bytes = null;
+                            entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
+                            device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
+                            device_list.add(device_info);
+                        }
                     }
                 }
             }
@@ -263,7 +306,6 @@ public class BleManagerService extends Service {
         public Bundle[] getCharacteristic(String service_uuid) throws RemoteException {
             return null;
         }
-
 
         @Override
         public boolean leIsEnable() throws RemoteException {
@@ -358,6 +400,16 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean disconnect() throws RemoteException {
+            return false;
+        }
+
+        @Override
+        public boolean disconnectByName(String device_name) throws RemoteException{
+            return false;
+        }
+
+        @Override
+        public boolean disconnectByMac(String device_mac) throws RemoteException{
             return false;
         }
 

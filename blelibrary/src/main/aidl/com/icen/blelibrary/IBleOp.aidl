@@ -8,7 +8,7 @@ interface IBleOp {
     Bundle[] getDeviceInfo();
     Bundle[] getServices();
     Bundle[] getCharacteristic(String service_uuid);
-    Bundle   getDeviceInfoByAddress(String device_mac);
+    Bundle[] getDeviceInfoByAddress(String device_mac);
     Bundle[] getDeviceInfoByName(String device_name);
 
     boolean leIsEnable();
@@ -18,6 +18,8 @@ interface IBleOp {
     boolean connectToDevice(String remote_address);
     void initialNotification(String notification_uuid);
     boolean disconnect();
+    boolean disconnectByName(String device_name);
+    boolean disconnectByMac(String device_mac);
 
     boolean readCharacteristic(String read_uuid);
     boolean writeCharacteristic(String write_uuid, in byte[] write_content);

@@ -7,13 +7,14 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.text.TextUtils;
 
-import com.google.protobuf.ByteString;
 import com.icen.blelibrary.config.BleLibsConfig;
-import com.icen.blelibrary.config.ConnectBleDevice;
 import com.icen.blelibrary.utils.BleLogUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * BLE系统管理器，实现功能包括：
@@ -77,14 +78,6 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     /**
-     * 设置异步回调接口
-     * @param call_back
-     */
-    public void setManagerCallback(BleManagerCallBack call_back){
-        mClientCallback = call_back;
-    }
-
-    /**
      * 管理服务是否就绪
      * “就绪”是指：管理器和管理服务是否完成连接
      * @return True 表示已经就绪，反之未就绪
@@ -96,6 +89,153 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         }
         BleLogUtils.outputManagerLog("BleManager::isReady= " + is_ready);
         return is_ready;
+    }
+
+    /**
+     * 设置异步回调接口
+     * @param call_back
+     */
+    public void setManagerCallback(BleManagerCallBack call_back){
+        mClientCallback = call_back;
+    }
+
+    /**
+     * 判断当前是否已经与LE外设有连接
+     * @return TRUE 表示已经连接上； FALSE：表示没有任何连接
+     */
+    public boolean hasConnectToDevice(){
+        if (null != mBleOp){
+            try {
+                return mBleOp.hasConnectToDevice();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取附近的BLE设备
+     * @return BLE设备列表
+     */
+    public Bundle[] getAllDevices(){
+        if (null != mBleOp){
+            try {
+                Bundle[] all_devices = mBleOp.getDeviceInfo();
+                return all_devices;
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取已经连接的BLE外设包含的服务列表
+     * @return 服务列表，是一个BUNDLE数组
+     */
+    public Bundle[] getDeviceService(){
+        if (null != mBleOp){
+            try {
+                Bundle[] all_services = mBleOp.getServices();
+                BleLogUtils.outputManagerLog("getDeviceService::Get service= "  +
+                        ((null == all_services || all_services.length <= 0) ?
+                                "No service in device" : String.valueOf(all_services.length)));
+                return all_services;
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("getDeviceService::Get device service false");
+        return null;
+    }
+
+    /**
+     * 获取指定服务中包含的特征列表
+     * @param service_uuid 指定的UUID
+     * @return 服务中包含的特征列表
+     */
+    public Bundle[] getAllCharacteristicInService(String service_uuid) {
+        if (null != mBleOp) {
+            try {
+                Bundle[] all_characteristics = mBleOp.getCharacteristic(service_uuid);
+                BleLogUtils.outputManagerLog("getAllCharacteristicInService::Get s_uuid= " + service_uuid +
+                        " characteristics result= " + ((null == all_characteristics || all_characteristics.length <= 0) ?
+                        "No characteristics" : String.valueOf(all_characteristics.length)));
+                return all_characteristics;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("getAllCharacteristicInService::Get s_uuid= " + service_uuid +
+                " characteristics false");
+        return null;
+    }
+
+    /**
+     * 获取BLE外设包含的所有特征，返回一个hash-map，依据服务的UUID进行分类
+     * @return HashMap，包含了所有的特征
+     */
+    public HashMap<String, ArrayList<Bundle>> getAllCharacteristics() {
+        HashMap<String, ArrayList<Bundle>> characteristic_map = new HashMap<>();
+        if (null != mBleOp) {
+            try {
+                Bundle[] all_services = mBleOp.getServices();
+                if (null != all_services && all_services.length > 0) {
+                    for (int service_index = 0; service_index < all_services.length; service_index++) {
+                        String service_uuid = all_services[service_index].getString(BleLibsConfig.LE_SERVICE_UUID);
+                        Bundle[] current_ch_list = mBleOp.getCharacteristic(service_uuid);
+                        if (null != current_ch_list && current_ch_list.length > 0) {
+                            ArrayList<Bundle> current_ch_array = new ArrayList<>();
+                            for (int ch_index = 0; ch_index < current_ch_list.length; ch_index ++) {
+                                current_ch_array.add(current_ch_list[ch_index]);
+                            }
+                            characteristic_map.put(service_uuid, current_ch_array);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("getAllCharacteristics::Get characteristic finish. Result = " +
+                ((null == characteristic_map || characteristic_map.size() <= 0) ?
+                        "No characteristics" : String.valueOf(characteristic_map.size())) );
+        return characteristic_map;
+    }
+
+    /**
+     * 根据输入的设备MAC地址在所有被搜索到的LE外设中查找目标外设。
+     * 如果输入的LE外设MAC地址是空，则返回所有LE外设
+     * @param device_mac 需要查找的LE外设名称
+     * @return 外设广播信息列表
+     */
+    public Bundle[] getDeviceInfoByMac(String device_mac) {
+        if (null != mBleOp){
+            try {
+                return mBleOp.getDeviceInfoByAddress(device_mac);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 根据输入的设备名称在所有被搜索到的LE外设中查找目标外设。
+     * 如果输入的LE外设名称是空，则返回所有LE外设
+     * @param device_name 需要查找的LE外设名称
+     * @return 外设广播信息列表
+     */
+    public Bundle[] getDeviceInfoByName(String device_name) {
+        if (null != mBleOp){
+            try {
+                return mBleOp.getDeviceInfoByName(device_name);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     /**
@@ -115,6 +255,10 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_enabled;
     }
 
+    /**
+     * 打开蓝牙开关
+     * @return TRUE 表示成功；FALSE表示操作失败
+     */
     public boolean enableBle(){
         boolean is_success = false;
         if (null != mBleOp) {
@@ -134,6 +278,10 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_success;
     }
 
+    /**
+     * 关闭蓝牙开关
+     * @return TRUE表示成功
+     */
     public boolean disableBle(){
         boolean is_success = false;
         if (null != mBleOp) {
@@ -172,19 +320,82 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     /**
-     * 获取附近的BLE设备
-     * @return BLE设备列表
+     * 连接到一个指定的LE外设
+     * @param remote_address
+     * @return
      */
-    public Bundle[] getAllDevices(){
+    public boolean connectToDevice(String remote_address){
         if (null != mBleOp){
             try {
-                Bundle[] all_devices = mBleOp.getDeviceInfo();
-                return all_devices;
+                return mBleOp.connectToDevice(remote_address);
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        return null;
+        return false;
+    }
+
+    /**
+     * 初始化LE外设广播监听
+     * @param notification_uuid 通知的UUID
+     */
+    public void initialNotification(String notification_uuid){
+        if (null != mBleOp){
+            try {
+                mBleOp.initialNotification(notification_uuid);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 切断所有LE外设的LE连接
+     * @return
+     */
+    public boolean disconnect(){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.disconnect();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 切断与指定外设名称的LE外设的连接
+     * 如果参数为NULL，与disconnect效果相同
+     * @param device_name LE外设名称，扫描阶段提供
+     * @return
+     */
+    public boolean disconnectByName(String device_name){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.disconnectByName(device_name);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 切断与指定MAC地址的LE外设的连接
+     * 如果参数为NULL，与disconnect效果相同
+     * @param device_mac LE外设MAC地址，扫描阶段提供
+     * @return
+     */
+    public boolean disconnectByMac(String device_mac){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.disconnectByName(device_mac);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 
     //-----------------------------------------implement ServiceConnection interface--------------------------------------//
