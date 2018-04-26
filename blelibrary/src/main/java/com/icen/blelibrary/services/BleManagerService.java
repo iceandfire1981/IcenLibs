@@ -308,6 +308,11 @@ public class BleManagerService extends Service {
         }
 
         @Override
+        public boolean isSupportLE(){
+            return false;
+        }
+
+        @Override
         public boolean leIsEnable() throws RemoteException {
             boolean is_enable = false;
             if (null != mBleAdapter) {

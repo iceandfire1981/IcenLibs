@@ -11,6 +11,7 @@ interface IBleOp {
     Bundle[] getDeviceInfoByAddress(String device_mac);
     Bundle[] getDeviceInfoByName(String device_name);
 
+    boolean isSupportLE();
     boolean leIsEnable();
     boolean bleSwitcher(boolean enabled);
     boolean startDiscoveryDevice();

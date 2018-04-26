@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.text.TextUtils;
 
 import com.icen.blelibrary.config.BleLibsConfig;
 import com.icen.blelibrary.utils.BleLogUtils;
@@ -239,6 +238,21 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     /**
+     * 查询当前设备是否支持LE特性
+     * @return true 表示支持支持LE特性，反之不支持
+     */
+    public boolean isSupportLE() {
+        if (null != mBleOp) {
+            try {
+                return mBleOp.isSupportLE();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
      * 获取设备蓝牙状态
      * @return true: 当前蓝牙开关已经开启；false：当前蓝牙开关已经关闭
      */
@@ -392,6 +406,78 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             try {
                 return mBleOp.disconnectByName(device_mac);
             } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 向指定的特征发送读指令。
+     * 【异步方法】
+     * @param read_uuid 读信息的UUID
+     * @return 操作是否成功
+     */
+    public boolean readCharacteristic(String read_uuid) {
+        if (null != mBleOp){
+            try {
+                return mBleOp.readCharacteristic(read_uuid);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * LE外设交互指令（写）：byte交互版本
+     * 【异步方法】
+     * @param write_uuid 写信息的UUID
+     * @param write_content 写的内容
+     * @return 操作是否成功
+     */
+     public boolean writeCharacteristic(String write_uuid, byte[] write_content){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.writeCharacteristic(write_uuid, write_content);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+     }
+
+    /**
+     * LE外设交互指令（写）：字符串交互版本
+     * 【异步方法】
+     * @param write_uuid 写信息的UUID
+     * @param write_content 写的内容
+     * @return 操作是否成功
+     */
+    public boolean writeCharacteristic(String write_uuid, String write_content){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.writeCharacteristicString(write_uuid, write_content);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * LE外设交互指令（写）：整型交互版本
+     * 【异步方法】
+     * @param write_uuid 写信息的UUID
+     * @param write_content 写的内容
+     * @param content_format 格式
+     * @return 操作是否成功
+     */
+    public boolean writeCharacteristic(String write_uuid, int write_content, int content_format){
+        if (null != mBleOp) {
+            try {
+                return mBleOp.writeCharacteristicInt(write_uuid, write_content, content_format);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
