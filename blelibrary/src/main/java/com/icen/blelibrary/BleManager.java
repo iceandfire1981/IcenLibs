@@ -505,12 +505,12 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     //-----------------------------------------implement IBleOpCallback interface----------------------------------------//
     @Override
     public void onDeviceScan(int scan_process, String device_name, String device_address,
-                             String device_class, byte[] broadcast_content) throws RemoteException {
+                             String device_class, int device_rssi, byte[] broadcast_content) throws RemoteException {
         BleLogUtils.outputManagerLog("BleManager:onDeviceScan:name= " + device_name + " address= " + device_address +
-                                     " class= " + device_class + " content= " + Arrays.toString(broadcast_content) +
+                                     " class= " + device_class + " rssi = " + device_rssi + " content= " + Arrays.toString(broadcast_content) +
                                     " scan_process= " + scan_process);
         if (null != mClientCallback)
-            mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, broadcast_content);
+            mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, device_rssi, broadcast_content);
 
     }
 
@@ -525,7 +525,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     @Override
-    public void onReadCharacteristic(boolean is_success, String ch_uuid, byte[] ble_value) throws RemoteException {
+    public void onReadCharacteristic(boolean is_success, String ch_uuid, int read_step, byte[] ble_value) throws RemoteException {
 
     }
 
@@ -535,7 +535,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     @Override
-    public void onWriteCharacteristic(boolean is_success, String ch_uuid, byte[] ble_value) throws RemoteException {
+    public void onWriteCharacteristic(boolean is_success, String ch_uuid, int write_step, byte[] ble_value) throws RemoteException {
 
     }
 

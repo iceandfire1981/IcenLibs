@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.icen.blelibrary.config.BleLibsConfig.DEFAULT_RSSI;
+
 /**
  * Created by Alx Slash on 2017/10/29.
  * Author: alxslashtraces@gmail.com
@@ -73,7 +75,7 @@ public class BleManagerService extends Service {
             if (null != mBleOpCallback) {
                 try {
                     mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_DOING, bluetoothDevice.getName(),
-                            bluetoothDevice.getAddress(), bluetoothDevice.getClass().toString(), bytes);
+                            bluetoothDevice.getAddress(), bluetoothDevice.getClass().toString(), rssi, bytes);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -341,39 +343,45 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean startDiscoveryDevice() throws RemoteException {
+            //扫描开始前先确认参数：是否自动重连，扫描超时时长
             mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
             mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
 
             boolean is_success = false;
             if (null != mBleAdapter) {
                 mCurrentDeviceMap = new HashMap<>();
-                if (mIsScanning) {
+                if (mIsScanning) {//当前如果正在扫描需要先停止
                     stopDiscoveryDevice();
                     mIsScanning = false;
                 }
                 is_success = mBleAdapter.startLeScan(mLeScanCallback);
-                if (is_success)
-                    mIsScanning = false;
             }
 
             BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::result= " + is_success);
             if (is_success){
                 if (null != mBleOpCallback) {
-                    mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_BEGIN, null, null, null,
-                            null);
+                    mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_BEGIN, null, null,
+                            null, DEFAULT_RSSI, null);
                 }
+                mIsScanning = true;
                 //指定时间后停止扫描
                 mServiceHandler.postAtTime(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::overtime now" );
+                            mIsScanning = false;
                             stopDiscoveryDevice();
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
                     }
                 }, mScanOvertime);
+            } else {
+                if (null != mBleOpCallback)
+                    mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_EXCEPTION, null, null,
+                            null, DEFAULT_RSSI, null);
+                mIsScanning = false;
             }
             return is_success;
         }
@@ -388,8 +396,8 @@ public class BleManagerService extends Service {
 
             BleLogUtils.outputServiceLog("BleOpImpl::stopDiscoveryDevice=================");
             if (null != mBleOpCallback)
-                mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_END, null, null, null,
-                        null);
+                mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_END, null, null,
+                        null, DEFAULT_RSSI, null);
 
         }
 

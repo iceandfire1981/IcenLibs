@@ -31,13 +31,19 @@ public final class BleLibsConfig {
 
     private static final boolean DEFAULT_ENABLED_AUTO_CONNECT = true;//是否自动连接（默认为自动连接）
     private static final long    DEFAULT_SCAN_OVERTIME = 5000L;
+    public  static final int     DEFAULT_RSSI = -1;//默认信号强度
     private static final String  BLE_DEVICE_SPILT = "|";
     private static final String  BLE_DEVICE_INFO_SPILT = "%";
 
-    //扫描进度
+    //扫描进度：扫描开始，扫描进行中，扫描结束，扫描异常
     public static final int      LE_SCAN_PROCESS_BEGIN = 0;
     public static final int      LE_SCAN_PROCESS_DOING = LE_SCAN_PROCESS_BEGIN + 1;
     public static final int      LE_SCAN_PROCESS_END = LE_SCAN_PROCESS_BEGIN + 2;
+    public static final int      LE_SCAN_PROCESS_EXCEPTION = LE_SCAN_PROCESS_BEGIN - 1;
+
+    //BLE特征操作步骤标志，包括: 读操作结果反馈，因读操作获取数据
+    public static final int     LE_RW_GET_RESULT = 0;
+    public static final int     LE_RW_GET_DATA = LE_RW_GET_RESULT + 1;
 
     //BLE服务(SERVICE)配置
     public static final String   LE_SERVICE_UUID = "le_service_uuid";

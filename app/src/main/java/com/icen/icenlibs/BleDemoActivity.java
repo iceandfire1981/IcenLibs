@@ -128,7 +128,7 @@ public class BleDemoActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLEScan(int scan_process, String device_name, String device_class, String device_mac, byte[] broadcast_content) {
+    public void onLEScan(int scan_process, String device_name, String device_class, String device_mac, int device_rssi, byte[] broadcast_content) {
         AppLogUtils.outputActivityLog("BleDemoActivity::onLEScan::process= " + scan_process + " name= " + device_name +
                                 " class= " + device_class + " mac= " + device_mac + " content= " + Arrays.toString(broadcast_content));
         if (BleLibsConfig.LE_SCAN_PROCESS_BEGIN == scan_process){
