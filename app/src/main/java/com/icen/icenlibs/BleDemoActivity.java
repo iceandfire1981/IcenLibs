@@ -93,7 +93,6 @@ public class BleDemoActivity extends AppCompatActivity
 
     /**
      * Called when a view has been clicked.
-     *
      * @param v The view that was clicked.
      */
     @Override
@@ -155,6 +154,26 @@ public class BleDemoActivity extends AppCompatActivity
 
             }
         }
+    }
+
+    @Override
+    public void onConnectDevice(boolean is_success, String device_name, String device_mac) {
+
+    }
+
+    @Override
+    public void onInitialNotification(boolean is_success, String notification_uuid) {
+
+    }
+
+    @Override
+    public void onReadCh(int read_step, boolean is_success, String read_uuid, byte[] respond_data) {
+
+    }
+
+    @Override
+    public void onWriteCh(int write_step, boolean is_success, String write_uuid, byte[] respond_data) {
+
     }
 
     @Override

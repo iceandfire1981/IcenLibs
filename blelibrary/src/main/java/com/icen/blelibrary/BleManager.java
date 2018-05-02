@@ -511,22 +511,32 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                                     " scan_process= " + scan_process);
         if (null != mClientCallback)
             mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, device_rssi, broadcast_content);
-
     }
 
     @Override
     public void onConnectToDevice(boolean is_success, String device_address, String device_name) throws RemoteException {
-
+        BleLogUtils.outputManagerLog("onConnectToDevice::success= " + is_success +
+                " device_address= " + device_address + " device_name= " + device_name);
+        if (null != mClientCallback){
+            mClientCallback.onConnectDevice(is_success, device_name, device_address);
+        }
     }
 
     @Override
-    public void onInitialNotification(boolean is_success) throws RemoteException {
-
+    public void onInitialNotification(boolean is_success, String notification_uuid) throws RemoteException {
+        BleLogUtils.outputManagerLog("onInitialNotification::is_success= " + is_success +
+                " notification_uuid= " + notification_uuid);
+        if (null != mClientCallback)
+            mClientCallback.onInitialNotification(is_success, notification_uuid);
     }
 
     @Override
     public void onReadCharacteristic(boolean is_success, String ch_uuid, int read_step, byte[] ble_value) throws RemoteException {
-
+        BleLogUtils.outputManagerLog("onReadCharacteristic::success= " + is_success + " uuid= " + ch_uuid +
+                                    " step= " + read_step + " value= " + Arrays.toString(ble_value));
+        if (null != mClientCallback) {
+            mClientCallback.onReadCh(read_step, is_success, ch_uuid, ble_value);
+        }
     }
 
     @Override
@@ -536,7 +546,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
 
     @Override
     public void onWriteCharacteristic(boolean is_success, String ch_uuid, int write_step, byte[] ble_value) throws RemoteException {
-
+        BleLogUtils.outputManagerLog("onWriteCharacteristic::success= " + is_success + " uuid= " + ch_uuid +
+                " step= " + write_step + " value= " + Arrays.toString(ble_value));
+        if (null != mClientCallback) {
+            mClientCallback.onWriteCh(write_step, is_success, ch_uuid, ble_value);
+        }
     }
 
     @Override
