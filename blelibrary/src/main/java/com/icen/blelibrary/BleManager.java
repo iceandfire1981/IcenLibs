@@ -286,8 +286,6 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             }
         }
 
-        if (null != mClientCallback)
-            mClientCallback.onLESwitch(true, is_success);
         BleLogUtils.outputManagerLog("BleManager::enableBle= " + is_success);
         return is_success;
     }
@@ -308,8 +306,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                 e.printStackTrace();
             }
         }
-        if (null != mClientCallback)
-            mClientCallback.onLESwitch(false, is_success);
+
         BleLogUtils.outputManagerLog("BleManager::disableBle= " + is_success);
         return is_success;
     }
@@ -491,6 +488,12 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         mBleOp = IBleOp.Stub.asInterface(iBinder);
         if (null != mClientCallback)
             mClientCallback.onInitialManager(true);
+        try {
+            mBleOp.setBleOpCallback(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -511,6 +514,13 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                                     " scan_process= " + scan_process);
         if (null != mClientCallback)
             mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, device_rssi, broadcast_content);
+    }
+
+    @Override
+    public void onBLESwitch(int current_state){
+        BleLogUtils.outputManagerLog("BleManager:onBLESwitch:current_state= " + current_state);
+        if (null != mClientCallback)
+            mClientCallback.onLESwitch(current_state);
     }
 
     @Override

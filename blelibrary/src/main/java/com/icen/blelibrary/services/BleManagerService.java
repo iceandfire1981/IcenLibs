@@ -8,14 +8,14 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -43,6 +42,12 @@ import static com.icen.blelibrary.config.BleLibsConfig.DEFAULT_RSSI;
  */
 
 public class BleManagerService extends Service {
+
+    private static final IntentFilter INTENT_FILTER = new IntentFilter();
+    static {
+        INTENT_FILTER.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        INTENT_FILTER.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+    }
 
     private BleOpImpl mBleOpImpl;
     private IBleOpCallback mBleOpCallback;
@@ -56,6 +61,66 @@ public class BleManagerService extends Service {
     private long mScanOvertime;
 
     private Handler mServiceHandler = new Handler();
+
+    /**
+     * 用于监听移动端设备蓝牙开关状态变化以及连接状态
+     */
+    private BroadcastReceiver mBleStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String current_action = (null == intent) ? null : intent.getAction();
+
+            BleLogUtils.outputServiceLog("mBleStateReceiver::onReceive::Action= " +
+                    (!TextUtils.isEmpty(current_action) ? current_action : "No Action Here"));
+            if (BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED.equals(current_action)) {//处理连接状态的ACTION
+
+            } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(current_action)) {//处理蓝牙开启状态的ACTION
+                int current_stats = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                BleLogUtils.outputServiceLog("mBleStateReceiver::onReceive::current_stats= " + current_stats);
+                if (BluetoothAdapter.STATE_ON == current_stats) {//最终状态为关闭
+                    if (null != mBleOpCallback){
+                        try {
+                            mBleOpCallback.onBLESwitch(BleLibsConfig.BLE_SWITCH_ON);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (BluetoothAdapter.STATE_OFF == current_stats) {//最终状态为打开
+                    if (null != mBleOpCallback){
+                        try {
+                            mBleOpCallback.onBLESwitch(BleLibsConfig.BLE_SWITCH_OFF);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (BluetoothAdapter.STATE_TURNING_ON == current_stats) {//中间状态：正在打开
+                    if (null != mBleOpCallback){
+                        try {
+                            mBleOpCallback.onBLESwitch(BleLibsConfig.BLE_SWITCH_OPENING);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (BluetoothAdapter.STATE_TURNING_OFF == current_stats) {//中间状态：正在关闭
+                    if (null != mBleOpCallback){
+                        try {
+                            mBleOpCallback.onBLESwitch(BleLibsConfig.BLE_SWITCH_CLOSING);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (BluetoothAdapter.ERROR == current_stats){//失败状态
+                    if (null != mBleOpCallback){
+                        try {
+                            mBleOpCallback.onBLESwitch(BleLibsConfig.BLE_SWITCH_ERROR);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+    };
 
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -151,18 +216,31 @@ public class BleManagerService extends Service {
         super.onCreate();
         mBleAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
         initialSystemConfig();
+        //注册广播监听器
+        try {
+            registerReceiver(mBleStateReceiver, INTENT_FILTER);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mBleAdapter.cancelDiscovery();
+        try {
+            unregisterReceiver(mBleStateReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        if (null == mBleOpImpl)
+            mBleOpImpl = new BleOpImpl();
+        return mBleOpImpl;
     }
 
     private void initialSystemConfig(){
@@ -311,7 +389,9 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean isSupportLE(){
-            return false;
+            boolean is_support = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            BleLogUtils.outputServiceLog("isSupportLE::result= " + is_support);
+            return is_support;
         }
 
         @Override

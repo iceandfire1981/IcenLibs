@@ -1,6 +1,7 @@
 package com.icen.icenlibs;
 
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -27,6 +28,7 @@ public class BleDemoActivity extends AppCompatActivity
 
     private View mRootView;
     private Switch mSHLESwitch;
+    private Button mBtnScan, mBtnConnect;
 
     private BleManager mBleManager;
     private HashMap<String, Bundle> mDeviceListByName;
@@ -34,10 +36,7 @@ public class BleDemoActivity extends AppCompatActivity
 
 
     private static String[] REQUEST_PERMISSION = new String[]{
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
     };
 
     @Override
@@ -45,9 +44,12 @@ public class BleDemoActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ble_demo);
         mRootView = findViewById(R.id.ble_demo_le_root);
-        ((Button) findViewById(R.id.ble_demo_le_connect_button)).setOnClickListener(this);
-        ((Button) findViewById(R.id.ble_demo_le_scan_button)).setOnClickListener(this);
+        mBtnConnect = ((Button) findViewById(R.id.ble_demo_le_connect_button));
+        mBtnConnect.setOnClickListener(this);
+        mBtnScan = ((Button) findViewById(R.id.ble_demo_le_scan_button));
+        mBtnScan.setOnClickListener(this);
         mSHLESwitch = (Switch) findViewById(R.id.ble_demo_le_switch);
+
 
         mRootView.setEnabled(false);
         mBleManager = new BleManager(this);
@@ -57,16 +59,11 @@ public class BleDemoActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(this, REQUEST_PERMISSION, 1000);
+        } else {
+            mBleManager.startManager();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mBleManager.startManager();
     }
 
     @Override
@@ -114,16 +111,57 @@ public class BleDemoActivity extends AppCompatActivity
             mSHLESwitch.setChecked(mBleManager.isLeEnabled());
             Toast.makeText(BleDemoActivity.this, "initial manager success", Toast.LENGTH_LONG).show();
             mSHLESwitch.setOnCheckedChangeListener(this);
+            mBleManager.setManagerCallback(this);
+            if (mBleManager.isLeEnabled()) {
+                mBtnScan.setEnabled(true);
+                mBtnConnect.setEnabled(true);
+            } else {
+                mBtnScan.setEnabled(false);
+                mBtnConnect.setEnabled(false);
+            }
+
+            if (!mBleManager.isSupportLE()){
+                Toast.makeText(this, "not support le", Toast.LENGTH_LONG).show();
+                finish();
+            }
         } else {
             Toast.makeText(BleDemoActivity.this, "initial manager false", Toast.LENGTH_LONG).show();
             mSHLESwitch.setOnCheckedChangeListener(null);
             mSHLESwitch.setChecked(false);
+            mBleManager.setManagerCallback(null);
+            mBtnScan.setEnabled(false);
+            mBtnConnect.setEnabled(false);
         }
     }
 
     @Override
-    public void onLESwitch(boolean op_flag, boolean is_success){
-        AppLogUtils.outputActivityLog("BleDemoActivity::onLESwitch::op= " + op_flag + " result= " + is_success);
+    public void onLESwitch(int current_state){
+        AppLogUtils.outputActivityLog("BleDemoActivity::onLESwitch::current_state= " +current_state);
+        if (BleLibsConfig.BLE_SWITCH_CLOSING == current_state || BleLibsConfig.BLE_SWITCH_OPENING == current_state) {
+            Toast.makeText(this, "Bluetooth is operating now", Toast.LENGTH_LONG).show();
+            mBtnScan.setEnabled(false);
+            mBtnConnect.setEnabled(false);
+            mSHLESwitch.setEnabled(false);
+        } else if (BleLibsConfig.BLE_SWITCH_ON == current_state) {
+            mBtnScan.setEnabled(true);
+            mBtnConnect.setEnabled(true);
+            mSHLESwitch.setEnabled(true);
+        } else if (BleLibsConfig.BLE_SWITCH_OFF == current_state) {
+            mBtnScan.setEnabled(false);
+            mBtnConnect.setEnabled(false);
+            mSHLESwitch.setEnabled(true);
+        } else if (BleLibsConfig.BLE_SWITCH_ERROR == current_state){
+            mSHLESwitch.setOnCheckedChangeListener(null);
+            mSHLESwitch.setChecked(mBleManager.isLeEnabled());
+            mSHLESwitch.setOnCheckedChangeListener(this);
+            if (mBleManager.isLeEnabled()){
+                mBtnScan.setEnabled(true);
+                mBtnConnect.setEnabled(true);
+            } else {
+                mBtnScan.setEnabled(false);
+                mBtnConnect.setEnabled(false);
+            }
+        }
     }
 
     @Override
@@ -151,7 +189,6 @@ public class BleDemoActivity extends AppCompatActivity
                     mDeviceListByAddress.put(device_address_b, device_list[index]);
                     mDeviceListByName.put(device_name_b, device_list[index]);
                 }
-
             }
         }
     }
@@ -179,17 +216,13 @@ public class BleDemoActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean is_all_success = false;
-        for (int index = 0; index < grantResults.length; index ++) {
-            if (grantResults[index] != PackageInfo.REQUESTED_PERMISSION_GRANTED) {
-                is_all_success = false;
-            }
-            is_all_success = true;
-        }
 
-        if (!is_all_success) {
+        if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Request permission false", Toast.LENGTH_LONG).show();
             finish();
+        } else {
+            mBleManager.startManager();
         }
+
     }
 }

@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import com.icen.blelibrary.services.BleManagerService;
 import com.icen.blelibrary.utils.BleLogUtils;
 
+import java.net.PortUnreachableException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -34,6 +35,12 @@ public final class BleLibsConfig {
     public  static final int     DEFAULT_RSSI = -1;//默认信号强度
     private static final String  BLE_DEVICE_SPILT = "|";
     private static final String  BLE_DEVICE_INFO_SPILT = "%";
+
+    public static final int      BLE_SWITCH_ON = 0;
+    public static final int      BLE_SWITCH_OPENING = BLE_SWITCH_ON + 1;
+    public static final int      BLE_SWITCH_CLOSING = BLE_SWITCH_ON + 2;
+    public static final int      BLE_SWITCH_OFF = BLE_SWITCH_ON + 3;
+    public static final int      BLE_SWITCH_ERROR = BLE_SWITCH_ON - 1;
 
     //扫描进度：扫描开始，扫描进行中，扫描结束，扫描异常
     public static final int      LE_SCAN_PROCESS_BEGIN = 0;
