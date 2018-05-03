@@ -1,6 +1,5 @@
 package com.icen.icenlibs;
 
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -177,7 +176,7 @@ public class BleDemoActivity extends AppCompatActivity
             mDeviceListByAddress = new HashMap<>();
 
         } else if (BleLibsConfig.LE_SCAN_PROCESS_DOING == scan_process) {
-            Toast.makeText(this, "LE Scan doing", Toast.LENGTH_LONG).show();
+            //do nothing
         } else {
             Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
             Bundle[] device_list = mBleManager.getAllDevices();
@@ -218,7 +217,7 @@ public class BleDemoActivity extends AppCompatActivity
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Request permission false", Toast.LENGTH_LONG).show();
+            AppLogUtils.outputActivityLog("Demo::permission false");
             finish();
         } else {
             mBleManager.startManager();

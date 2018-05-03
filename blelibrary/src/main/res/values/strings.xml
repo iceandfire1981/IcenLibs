@@ -3,4 +3,5 @@
     <string name="config_auto_connect">自动重连：</string>
     <string name="config_over_time">扫描时长：</string>
     <string name="config_time">(ms)</string>
+    <string name="default_device_name">未命名</string>
 </resources>

@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import com.google.protobuf.ByteString;
 import com.icen.blelibrary.IBleOp;
 import com.icen.blelibrary.IBleOpCallback;
+import com.icen.blelibrary.R;
 import com.icen.blelibrary.config.BleLibsConfig;
 import com.icen.blelibrary.config.ConnectBleDevice;
 import com.icen.blelibrary.utils.BleLogUtils;
@@ -125,17 +126,23 @@ public class BleManagerService extends Service {
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
-            BleLogUtils.outputServiceLog("BleManagerService::onLeScan::mac= " + bluetoothDevice.getAddress() +
+            String device_mac = bluetoothDevice.getAddress().toLowerCase(Locale.getDefault());
+            String device_name = (TextUtils.isEmpty(bluetoothDevice.getName())) ?
+                        getString(R.string.default_device_name) : bluetoothDevice.getName().trim();
+            String device_class = bluetoothDevice.getBluetoothClass().toString();
+
+            BleLogUtils.outputServiceLog("BleManagerService::onLeScan::mac= " + device_mac +
+                    " name= " + device_name + " class= " + device_class +
                     " rssi= " + rssi + " content= " + ((null == bytes || bytes.length <= 0) ? "No Record" : Arrays.toString(bytes)));
 
             ConnectBleDevice.BleBroadcastRecordMessage.Builder device_builder = ConnectBleDevice.BleBroadcastRecordMessage.newBuilder();
-            device_builder.setDeviceName(bluetoothDevice.getName());
-            device_builder.setDeviceMac(bluetoothDevice.getAddress().toLowerCase(Locale.getDefault()));
-            device_builder.setDeviceClass(bluetoothDevice.getBluetoothClass().toString());
+            device_builder.setDeviceName(device_name);
+            device_builder.setDeviceMac(device_mac);
+            device_builder.setDeviceClass(device_class);
             device_builder.setDeviceRssi(rssi);
             device_builder.setBroadcastContent(ByteString.copyFrom(bytes));
 
-            mCurrentDeviceMap.put(bluetoothDevice.getAddress().toLowerCase(Locale.getDefault()), device_builder.build());
+            mCurrentDeviceMap.put(device_mac, device_builder.build());
 
             if (null != mBleOpCallback) {
                 try {
@@ -238,9 +245,16 @@ public class BleManagerService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        BleLogUtils.outputServiceLog("onBind::info= " + intent);
         if (null == mBleOpImpl)
             mBleOpImpl = new BleOpImpl();
         return mBleOpImpl;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        BleLogUtils.outputServiceLog("onUnbind::info= " + intent);
+        return super.onUnbind(intent);
     }
 
     private void initialSystemConfig(){
@@ -416,7 +430,6 @@ public class BleManagerService extends Service {
                     is_success = mBleAdapter.disable();
                 }
             }
-
             BleLogUtils.outputServiceLog("BleOpImpl::bleSwitcher::enabled= " + enabled + " result= " + is_success);
             return is_success;
         }
@@ -437,7 +450,7 @@ public class BleManagerService extends Service {
                 is_success = mBleAdapter.startLeScan(mLeScanCallback);
             }
 
-            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::result= " + is_success);
+            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::result= " + is_success + " auto= " + mAutoConnect + " ot= " + mScanOvertime);
             if (is_success){
                 if (null != mBleOpCallback) {
                     mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_BEGIN, null, null,
@@ -445,12 +458,11 @@ public class BleManagerService extends Service {
                 }
                 mIsScanning = true;
                 //指定时间后停止扫描
-                mServiceHandler.postAtTime(new Runnable() {
+                mServiceHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::overtime now" );
-                            mIsScanning = false;
                             stopDiscoveryDevice();
                         } catch (RemoteException e) {
                             e.printStackTrace();
@@ -468,13 +480,12 @@ public class BleManagerService extends Service {
 
         @Override
         public void stopDiscoveryDevice() throws RemoteException {
+            BleLogUtils.outputServiceLog("BleOpImpl::stopDiscoveryDevice::mIs= " + mIsScanning);
             if (null != mBleAdapter && mIsScanning) {
                 mBleAdapter.stopLeScan(mLeScanCallback);
                 mBleAdapter.cancelDiscovery();
                 mIsScanning = false;
             }
-
-            BleLogUtils.outputServiceLog("BleOpImpl::stopDiscoveryDevice=================");
             if (null != mBleOpCallback)
                 mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_END, null, null,
                         null, DEFAULT_RSSI, null);

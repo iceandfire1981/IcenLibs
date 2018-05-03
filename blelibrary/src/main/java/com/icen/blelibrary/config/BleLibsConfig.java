@@ -122,7 +122,11 @@ public final class BleLibsConfig {
      * @param service_connection 与管理服务连接的类
      */
     public static final void stopBleService(Context ctx, ServiceConnection service_connection) {
-        ctx.unbindService(service_connection);
+        try {
+            ctx.unbindService(service_connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         BleLogUtils.outputUtilLog("BleLibsConfig::stopBleService=============");
     }
 
