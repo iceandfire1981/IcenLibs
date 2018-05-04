@@ -57,6 +57,23 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     /**
+     * 重新初始化管理器
+     * @return
+     */
+    public boolean reInitialManager(){
+        boolean is_success = false;
+        if (isReady()) {
+            try {
+                mBleOp.setBleOpCallback(this);
+                is_success = true;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return is_success;
+    }
+
+    /**
      * 销毁管理器，包括：
      *  取消返回回调接口；断开BLE到手机的连接；断开管理器和管理服务的连接
      */
@@ -66,7 +83,6 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             try {
                 mBleOp.setBleOpCallback(null);
                 mBleOp.disconnect();
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -118,6 +134,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return BLE设备列表
      */
     public Bundle[] getAllDevices(){
+        BleLogUtils.outputManagerLog("getAllDevices::mBle= " + mBleOp);
         if (null != mBleOp){
             try {
                 Bundle[] all_devices = mBleOp.getDeviceInfo();

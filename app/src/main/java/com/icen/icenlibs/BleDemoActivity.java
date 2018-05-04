@@ -1,5 +1,6 @@
 package com.icen.icenlibs;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -27,7 +28,7 @@ public class BleDemoActivity extends AppCompatActivity
 
     private View mRootView;
     private Switch mSHLESwitch;
-    private Button mBtnScan, mBtnConnect;
+    private Button mBtnScan, mBtnConnect, mBtnShowDeviceList;
 
     private BleManager mBleManager;
     private HashMap<String, Bundle> mDeviceListByName;
@@ -47,17 +48,14 @@ public class BleDemoActivity extends AppCompatActivity
         mBtnConnect.setOnClickListener(this);
         mBtnScan = ((Button) findViewById(R.id.ble_demo_le_scan_button));
         mBtnScan.setOnClickListener(this);
+        mBtnShowDeviceList = (Button) findViewById(R.id.ble_demo_le_showlist_button);
+        mBtnShowDeviceList.setOnClickListener(this);
         mSHLESwitch = (Switch) findViewById(R.id.ble_demo_le_switch);
-
 
         mRootView.setEnabled(false);
         mBleManager = new BleManager(this);
         mBleManager.setManagerCallback(this);
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(this, REQUEST_PERMISSION, 1000);
         } else {
@@ -66,8 +64,14 @@ public class BleDemoActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onResume() {
+        super.onResume();
+        mBleManager.reInitialManager();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         mBleManager.destroyManager();
     }
 
@@ -98,6 +102,15 @@ public class BleDemoActivity extends AppCompatActivity
                 break;
             case R.id.ble_demo_le_scan_button:
                 mBleManager.startScanDevice();
+                break;
+            case R.id.ble_demo_le_showlist_button:
+                Intent show_list_intent = new Intent("com.icen.icenlibs.BLE_DEVICE_LIST_DEMO");
+                show_list_intent.addCategory(Intent.CATEGORY_DEFAULT);
+                try {
+                    startActivity(show_list_intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }

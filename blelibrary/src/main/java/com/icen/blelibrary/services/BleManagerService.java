@@ -268,6 +268,7 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[] getDeviceInfo(){
+            BleLogUtils.outputServiceLog("getDeviceInfo::size= " + (null != mCurrentDeviceMap ? String.valueOf(mCurrentDeviceMap.size()) : "-1"));
             if (null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) {
                 BleLogUtils.outputServiceLog("getDeviceInfo::info::There are no devices here");
                 return null;
@@ -278,17 +279,19 @@ public class BleManagerService extends Service {
                 while (device_iterator.hasNext()){
                     Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry =
                             (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
+                    BleLogUtils.outputServiceLog("getDeviceInfo::key= " + device_entry.getKey());
                     Bundle device_info = new Bundle();
                     device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, device_entry.getValue().getDeviceName());
                     device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, device_entry.getValue().getDeviceMac());
                     device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, device_entry.getValue().getDeviceClass());
-                    byte[] content_bytes = null;
+                    device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, device_entry.getValue().getDeviceRssi());
+                    byte[] content_bytes = device_entry.getValue().getBroadcastContent().toByteArray();
                     device_entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
                     device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
                     device_bundles[device_index] = device_info;
                     device_index = device_index + 1;
-
                 }
+
                 return device_bundles;
             }
         }

@@ -13,17 +13,17 @@ import com.icen.blelibrary.utils.AdvDataUtils;
 import com.icen.icenlibs.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public final class DeviceListApatcher extends BaseAdapter {
+public final class DeviceListAdapter extends BaseAdapter {
 
     private Context mContext;
     private ArrayList<Bundle> mInputDevices;
 
-
-    public DeviceListApatcher(Context ctx, HashMap<String, Bundle> devices_map){
+    public DeviceListAdapter(Context ctx, HashMap<String, Bundle> devices_map){
         mContext = ctx;
 
         if (null != mInputDevices)
@@ -118,16 +118,15 @@ public final class DeviceListApatcher extends BaseAdapter {
         Bundle current_device_info = mInputDevices.get(position);
         String device_name = current_device_info.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
         String device_mac  = current_device_info.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS);
+        long   device_rssi = current_device_info.getLong(BleLibsConfig.BROADCAST_INFO_SIGNAL);
         byte[] device_content = current_device_info.getByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT);
-
         byte[] power_level_byte = AdvDataUtils.adv_report_parse(AdvDataUtils.BLE_GAP_AD_TYPE_TX_POWER_LEVEL, device_content);
-        byte[] power_signal_byte = AdvDataUtils.adv_report_parse(AdvDataUtils.BLE_GAP_AD_TYPE_TX_POWER_LEVEL, device_content);
 
         tv_device_name.setText(device_name);
         tv_device_mac.setText(device_mac);
-
-
-
+        tv_device_signal_level.setText(String.valueOf(device_rssi));
+        tv_device_power_level.setText((null != power_level_byte && power_level_byte.length > 0 ) ?
+                Arrays.toString(power_level_byte) : "-1");
         return convertView;
     }
 }

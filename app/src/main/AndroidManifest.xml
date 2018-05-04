@@ -39,6 +39,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".DeviceListActivity">
+            <intent-filter>
+                <action android:name="com.icen.icenlibs.BLE_DEVICE_LIST_DEMO" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service android:name="com.icen.blelibrary.services.BleManagerService">
             <intent-filter>
                 <action android:name="com.icen.blelibrary.START_BLE_SERVICE" />
@@ -46,8 +53,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
-
-        <activity android:name=".DeviceListActivity"></activity>
     </application>
 
 </manifest>
