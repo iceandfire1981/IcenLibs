@@ -33,6 +33,23 @@ public class DeviceListActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onBackPressed() {
+        AppLogUtils.outputActivityLog("DeviceListActivity::onBackPressed==============");
+        if (null != mBleManager && mBleManager.isReady()){
+            mBleManager.destroyManager();
+        }
+        super.onBackPressed();
+    }
+
+    @Override
+    public void finish() {
+        AppLogUtils.outputActivityLog("DeviceListActivity::finish==============");
+        if (null != mBleManager & mBleManager.isReady())
+            mBleManager.destroyManager();
+        super.finish();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         mBleManager.destroyManager();

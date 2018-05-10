@@ -52,7 +52,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             is_success = BleLibsConfig.startBleService(mContext, this);
         }
 
-        BleLogUtils.outputManagerLog("BleManager::startManager::is_success= " + is_success);
+        BleLogUtils.outputManagerLog("BleManager::startManager::System Ready= " + isReady() + " result= " + is_success);
         return is_success;
     }
 
@@ -70,6 +70,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                 e.printStackTrace();
             }
         }
+        BleLogUtils.outputManagerLog("reInitialManager::ready= " + isReady() + " result= " + is_success);
         return is_success;
     }
 
@@ -78,7 +79,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      *  取消返回回调接口；断开BLE到手机的连接；断开管理器和管理服务的连接
      */
     public void destroyManager(){
-        BleLogUtils.outputManagerLog("BleManager::destroyManager::op= " + mBleOp);
+        BleLogUtils.outputManagerLog("BleManager::destroyManager::ready= " + isReady());
         if (null != mBleOp) {
             try {
                 mBleOp.setBleOpCallback(null);
@@ -119,14 +120,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return TRUE 表示已经连接上； FALSE：表示没有任何连接
      */
     public boolean hasConnectToDevice(){
-        if (null != mBleOp){
+        boolean is_success = false;
+        if (isReady()){
             try {
-                return mBleOp.hasConnectToDevice();
+                is_success = mBleOp.hasConnectToDevice();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog("hasConnectToDevice::System Ready= " + isReady() + " is_success= " + is_success);
+        return is_success;
     }
 
     /**
@@ -134,15 +137,17 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return BLE设备列表
      */
     public Bundle[] getAllDevices(){
-        BleLogUtils.outputManagerLog("getAllDevices::mBle= " + mBleOp);
-        if (null != mBleOp){
+        Bundle[] all_devices = null;
+        if (isReady()){
             try {
-                Bundle[] all_devices = mBleOp.getDeviceInfo();
+                all_devices = mBleOp.getDeviceInfo();
                 return all_devices;
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
+        BleLogUtils.outputManagerLog("getAllDevices::System Ready= " + isReady() + " Found= " +
+                ((null == all_devices && all_devices.length <= 0) ? "No Device found":("Found device total= " + all_devices.length)));
         return null;
     }
 
@@ -151,19 +156,17 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 服务列表，是一个BUNDLE数组
      */
     public Bundle[] getDeviceService(){
-        if (null != mBleOp){
+        Bundle[] all_services = null;
+        if (isReady()){
             try {
-                Bundle[] all_services = mBleOp.getServices();
-                BleLogUtils.outputManagerLog("getDeviceService::Get service= "  +
-                        ((null == all_services || all_services.length <= 0) ?
-                                "No service in device" : String.valueOf(all_services.length)));
-                return all_services;
+                all_services = mBleOp.getServices();
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        BleLogUtils.outputManagerLog("getDeviceService::Get device service false");
-        return null;
+        BleLogUtils.outputManagerLog("getDeviceService::System Ready= " + isReady() + " Found= " +
+                ((null == all_services && all_services.length <= 0) ? "No Device found":("Found device total= " + all_services.length)));
+        return all_services;
     }
 
     /**
@@ -172,20 +175,17 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 服务中包含的特征列表
      */
     public Bundle[] getAllCharacteristicInService(String service_uuid) {
-        if (null != mBleOp) {
+        Bundle[] all_characteristics = null;
+        if (isReady()) {
             try {
-                Bundle[] all_characteristics = mBleOp.getCharacteristic(service_uuid);
-                BleLogUtils.outputManagerLog("getAllCharacteristicInService::Get s_uuid= " + service_uuid +
-                        " characteristics result= " + ((null == all_characteristics || all_characteristics.length <= 0) ?
-                        "No characteristics" : String.valueOf(all_characteristics.length)));
-                return all_characteristics;
+                all_characteristics = mBleOp.getCharacteristic(service_uuid);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        BleLogUtils.outputManagerLog("getAllCharacteristicInService::Get s_uuid= " + service_uuid +
-                " characteristics false");
-        return null;
+        BleLogUtils.outputManagerLog("getAllCharacteristicInService::System Ready= " + isReady() + " Found= " +
+                ((null == all_characteristics && all_characteristics.length <= 0) ? "No Device found":("Found device total= " + all_characteristics.length)));
+        return all_characteristics;
     }
 
     /**
@@ -194,7 +194,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      */
     public HashMap<String, ArrayList<Bundle>> getAllCharacteristics() {
         HashMap<String, ArrayList<Bundle>> characteristic_map = new HashMap<>();
-        if (null != mBleOp) {
+        if (isReady()) {
             try {
                 Bundle[] all_services = mBleOp.getServices();
                 if (null != all_services && all_services.length > 0) {
@@ -214,7 +214,8 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                 e.printStackTrace();
             }
         }
-        BleLogUtils.outputManagerLog("getAllCharacteristics::Get characteristic finish. Result = " +
+        BleLogUtils.outputManagerLog("getAllCharacteristics::System Ready= " + isReady() +
+                "Get characteristic finish. Result = " +
                 ((null == characteristic_map || characteristic_map.size() <= 0) ?
                         "No characteristics" : String.valueOf(characteristic_map.size())) );
         return characteristic_map;
@@ -227,14 +228,18 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 外设广播信息列表
      */
     public Bundle[] getDeviceInfoByMac(String device_mac) {
-        if (null != mBleOp){
+        Bundle[] all_devices = null;
+        if (isReady()){
             try {
-                return mBleOp.getDeviceInfoByAddress(device_mac);
+                all_devices =  mBleOp.getDeviceInfoByAddress(device_mac);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return null;
+        BleLogUtils.outputManagerLog("getDeviceInfoByMac::System Ready= " + isReady() +
+                "getDeviceInfoByMac::Found= " +
+                ((null == all_devices && all_devices.length <= 0) ? "No Device found":("Found device total= " + all_devices.length)));
+        return all_devices;
     }
 
     /**
@@ -244,14 +249,18 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 外设广播信息列表
      */
     public Bundle[] getDeviceInfoByName(String device_name) {
-        if (null != mBleOp){
+        Bundle[] all_devices = null;
+        if (isReady()){
             try {
-                return mBleOp.getDeviceInfoByName(device_name);
+                all_devices = mBleOp.getDeviceInfoByName(device_name);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return null;
+        BleLogUtils.outputManagerLog("getDeviceInfoByName::System Ready= " + isReady() +
+                "getDeviceInfoByMac::Found= " +
+                ((null == all_devices && all_devices.length <= 0) ? "No Device found":("Found device total= " + all_devices.length)));
+        return all_devices;
     }
 
     /**
@@ -259,14 +268,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return true 表示支持支持LE特性，反之不支持
      */
     public boolean isSupportLE() {
-        if (null != mBleOp) {
+        boolean is_support = false;
+        if (isReady()) {
             try {
-                return mBleOp.isSupportLE();
+                is_support = mBleOp.isSupportLE();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" isSupportLE::System Ready= " + isReady() + " result=" + is_support);
+        return is_support;
     }
 
     /**
@@ -275,14 +286,14 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      */
     public boolean isLeEnabled(){
         boolean is_enabled = false;
-        if (null != mBleOp) {
+        if (isReady()) {
             try {
                 is_enabled = mBleOp.leIsEnable();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        BleLogUtils.outputManagerLog("BleManager::isLeEnabled= " + is_enabled);
+        BleLogUtils.outputManagerLog(" isLeEnabled::System Ready= " + isReady() + " result=" + is_enabled);
         return is_enabled;
     }
 
@@ -292,7 +303,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      */
     public boolean enableBle(){
         boolean is_success = false;
-        if (null != mBleOp) {
+        if (isReady()) {
             try {
                 if (!isLeEnabled())
                     is_success = mBleOp.bleSwitcher(true);
@@ -303,7 +314,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             }
         }
 
-        BleLogUtils.outputManagerLog("BleManager::enableBle= " + is_success);
+        BleLogUtils.outputManagerLog(" enableBle::System Ready= " + isReady() + " result=" + is_success);
         return is_success;
     }
 
@@ -313,7 +324,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      */
     public boolean disableBle(){
         boolean is_success = false;
-        if (null != mBleOp) {
+        if (isReady()) {
             try {
                 if (isLeEnabled())
                     is_success = mBleOp.bleSwitcher(false);
@@ -323,8 +334,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                 e.printStackTrace();
             }
         }
-
-        BleLogUtils.outputManagerLog("BleManager::disableBle= " + is_success);
+        BleLogUtils.outputManagerLog(" disableBle::System Ready= " + isReady() + " result=" + is_success);
         return is_success;
     }
 
@@ -339,11 +349,10 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             try {
                 is_success = mBleOp.startDiscoveryDevice();
             } catch (Exception e) {
-                BleLogUtils.outputManagerLog("BleManager::startDiscoveryDevice::exception= " + e.getCause());
                 e.printStackTrace();
             }
         }
-        BleLogUtils.outputManagerLog("BleManager::startDiscoveryDevice::mCompleteFinish= " + is_success);
+        BleLogUtils.outputManagerLog(" startScanDevice::System Ready= " + isReady() + " result=" + is_success);
         return is_success;
     }
 
@@ -353,14 +362,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return
      */
     public boolean connectToDevice(String remote_address){
-        if (null != mBleOp){
+        boolean is_success = false;
+        if (isReady()){
             try {
-                return mBleOp.connectToDevice(remote_address);
+                is_success = mBleOp.connectToDevice(remote_address);
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" connectToDevice::System Ready= " + isReady() + " result=" + is_success);
+        return is_success;
     }
 
     /**
@@ -368,13 +379,14 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @param notification_uuid 通知的UUID
      */
     public void initialNotification(String notification_uuid){
-        if (null != mBleOp){
+        if (isReady()){
             try {
                 mBleOp.initialNotification(notification_uuid);
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
+        BleLogUtils.outputManagerLog(" initialNotification::System Ready= " + isReady() + " operation finish!!!");
     }
 
     /**
@@ -382,14 +394,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return
      */
     public boolean disconnect(){
-        if (null != mBleOp) {
+        boolean is_success = false;
+        if (isReady()) {
             try {
-                return mBleOp.disconnect();
+                is_success = mBleOp.disconnect();
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" disconnect::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     /**
@@ -399,14 +413,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return
      */
     public boolean disconnectByName(String device_name){
-        if (null != mBleOp) {
+        boolean is_success = false;
+        if (isReady()) {
             try {
-                return mBleOp.disconnectByName(device_name);
+                is_success = mBleOp.disconnectByName(device_name);
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" disconnectByName::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     /**
@@ -416,14 +432,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return
      */
     public boolean disconnectByMac(String device_mac){
-        if (null != mBleOp) {
+        boolean is_success = false;
+        if (isReady()) {
             try {
-                return mBleOp.disconnectByName(device_mac);
+                is_success = mBleOp.disconnectByName(device_mac);
             } catch (Exception e){
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" disconnectByMac::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     /**
@@ -433,14 +451,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 操作是否成功
      */
     public boolean readCharacteristic(String read_uuid) {
-        if (null != mBleOp){
+        boolean is_success = false;
+        if (isReady()){
             try {
-                return mBleOp.readCharacteristic(read_uuid);
+                is_success =  mBleOp.readCharacteristic(read_uuid);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" readCharacteristic::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     /**
@@ -451,14 +471,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 操作是否成功
      */
      public boolean writeCharacteristic(String write_uuid, byte[] write_content){
-        if (null != mBleOp) {
+        boolean is_success = false;
+        if (isReady()) {
             try {
-                return mBleOp.writeCharacteristic(write_uuid, write_content);
+                is_success = mBleOp.writeCharacteristic(write_uuid, write_content);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+         BleLogUtils.outputManagerLog(" writeCharacteristic::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
      }
 
     /**
@@ -469,14 +491,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 操作是否成功
      */
     public boolean writeCharacteristic(String write_uuid, String write_content){
-        if (null != mBleOp) {
+        boolean is_success = false;
+        if (isReady()) {
             try {
-                return mBleOp.writeCharacteristicString(write_uuid, write_content);
+                is_success = mBleOp.writeCharacteristicString(write_uuid, write_content);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" writeCharacteristic1::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     /**
@@ -488,14 +512,16 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @return 操作是否成功
      */
     public boolean writeCharacteristic(String write_uuid, int write_content, int content_format){
+        boolean is_success = false;
         if (null != mBleOp) {
             try {
-                return mBleOp.writeCharacteristicInt(write_uuid, write_content, content_format);
+                is_success = mBleOp.writeCharacteristicInt(write_uuid, write_content, content_format);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return false;
+        BleLogUtils.outputManagerLog(" writeCharacteristic2::System Ready= " + isReady() + " result= " + is_success);
+        return is_success;
     }
 
     //-----------------------------------------implement ServiceConnection interface--------------------------------------//

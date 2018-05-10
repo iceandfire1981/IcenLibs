@@ -114,6 +114,7 @@ public final class DeviceListAdapter extends BaseAdapter {
         TextView tv_device_mac  = (TextView) convertView.findViewById(R.id.device_item_mac);
         TextView tv_device_power_level  = (TextView) convertView.findViewById(R.id.device_item_power_level);
         TextView tv_device_signal_level  = (TextView) convertView.findViewById(R.id.device_item_signal);
+        TextView tv_device_content = (TextView) convertView.findViewById(R.id.device_item_content);
 
         Bundle current_device_info = mInputDevices.get(position);
         String device_name = current_device_info.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
@@ -127,6 +128,7 @@ public final class DeviceListAdapter extends BaseAdapter {
         tv_device_signal_level.setText(String.valueOf(device_rssi));
         tv_device_power_level.setText((null != power_level_byte && power_level_byte.length > 0 ) ?
                 Arrays.toString(power_level_byte) : "-1");
+        tv_device_content.setText(Arrays.toString(device_content));
         return convertView;
     }
 }

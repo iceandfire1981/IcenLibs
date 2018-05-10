@@ -11,10 +11,10 @@ public class MainEntryActivity extends AppCompatActivity {
     public static final String ACTION_BLE_CONFIG = "com.icen.icenlibs.BLE_CONFIG";
     public static final String ACTION_BLE_DEMO = "com.icen.icenlibs.BLE_DEMO";
 
-    // Used to load the 'native-lib' library on application startup.
+    /** Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
-    }
+    }*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
