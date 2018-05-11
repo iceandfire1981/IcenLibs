@@ -148,7 +148,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         }
         BleLogUtils.outputManagerLog("getAllDevices::System Ready= " + isReady() + " Found= " +
                 ((null == all_devices && all_devices.length <= 0) ? "No Device found":("Found device total= " + all_devices.length)));
-        return null;
+        return all_devices;
     }
 
     /**
