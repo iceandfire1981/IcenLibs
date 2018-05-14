@@ -1,11 +1,6 @@
 package com.icen.icenlibs;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -14,30 +9,23 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.icen.blelibrary.BleManager;
-import com.icen.blelibrary.BleManagerCallBack;
+import com.icen.blelibrary.activity.BleBaseActivity;
 import com.icen.blelibrary.config.BleLibsConfig;
 
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class BleDemoActivity extends AppCompatActivity
+public class BleDemoActivity extends BleBaseActivity
         implements CompoundButton.OnCheckedChangeListener,
-        View.OnClickListener,
-        ActivityCompat.OnRequestPermissionsResultCallback,
-        BleManagerCallBack{
+        View.OnClickListener{
 
     private View mRootView;
     private Switch mSHLESwitch;
     private Button mBtnScan, mBtnConnect, mBtnShowDeviceList;
 
-    private BleManager mBleManager;
     private HashMap<String, Bundle> mDeviceListByName;
     private HashMap<String, Bundle> mDeviceListByAddress;
 
-
-    private static String[] REQUEST_PERMISSION = new String[]{
-        android.Manifest.permission.ACCESS_COARSE_LOCATION
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,29 +39,9 @@ public class BleDemoActivity extends AppCompatActivity
         mBtnShowDeviceList = (Button) findViewById(R.id.ble_demo_le_showlist_button);
         mBtnShowDeviceList.setOnClickListener(this);
         mSHLESwitch = (Switch) findViewById(R.id.ble_demo_le_switch);
-
         mRootView.setEnabled(false);
-        mBleManager = new BleManager(this);
-        mBleManager.setManagerCallback(this);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(this, REQUEST_PERMISSION, 1000);
-        } else {
-            mBleManager.startManager();
-        }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mBleManager.reInitialManager();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mBleManager.destroyManager();
-    }
 
     /**
      * Called when the checked state of a compound button has changed.
@@ -203,38 +171,5 @@ public class BleDemoActivity extends AppCompatActivity
                 }
             }
         }
-    }
-
-    @Override
-    public void onConnectDevice(boolean is_success, String device_name, String device_mac) {
-
-    }
-
-    @Override
-    public void onInitialNotification(boolean is_success, String notification_uuid) {
-
-    }
-
-    @Override
-    public void onReadCh(int read_step, boolean is_success, String read_uuid, byte[] respond_data) {
-
-    }
-
-    @Override
-    public void onWriteCh(int write_step, boolean is_success, String write_uuid, byte[] respond_data) {
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            AppLogUtils.outputActivityLog("Demo::permission false");
-            finish();
-        } else {
-            mBleManager.startManager();
-        }
-
     }
 }

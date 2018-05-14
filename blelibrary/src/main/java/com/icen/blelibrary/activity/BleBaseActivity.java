@@ -43,15 +43,21 @@ public class BleBaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBackPressed() {
-        destoryBleManager();
-        super.onBackPressed();
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         reInitialManager();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        destroyBleManager();
+    }
+
+    @Override
+    public void onBackPressed() {
+        destroyBleManager();
+        super.onBackPressed();
     }
 
     @Override
@@ -122,6 +128,7 @@ public class BleBaseActivity extends AppCompatActivity
      * 启动管理器
      */
     protected void startBleManager(){
+        BleLogUtils.outputActivityLog("BleBaseActivity::startBleManager===========");
         mBleManager = null;
         mBleManager = new BleManager(this);
         mBleManager.setManagerCallback(this);
@@ -132,6 +139,8 @@ public class BleBaseActivity extends AppCompatActivity
      * 重新设置BLE-MANAGER
      */
     protected void reInitialManager() {
+        BleLogUtils.outputActivityLog("BleBaseActivity::re_init::System Ready= "
+                + (null != mBleManager && mBleManager.isReady()));
         if (null != mBleManager && mBleManager.isReady()) {
             mBleManager.reInitialManager();
         }
@@ -140,7 +149,7 @@ public class BleBaseActivity extends AppCompatActivity
     /**
      * 销毁管理器
      */
-    protected void destoryBleManager(){
+    protected void destroyBleManager(){
         if (null != mBleManager) {
             try {
                 mBleManager.destroyManager();

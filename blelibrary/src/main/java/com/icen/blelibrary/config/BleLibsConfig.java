@@ -59,6 +59,8 @@ public final class BleLibsConfig {
     //BLE特征（Characteristic）配置
     public static final String   LE_CHARACTERISTIC_UUID = "le_characteristic_uuid";
     public static final String   LE_CHARACTERISTIC_NAME = "le_characteristic_name";
+    public static final String   LE_CHARACTERISTIC_PERMISSION = "le_characteristic_permission";
+    public static final String   LE_CHARACTERISTIC_PROPERTIES = "le_characteristic_properties";
 
     /**
      * BLE管理服务配置文件：文件名为ble_config

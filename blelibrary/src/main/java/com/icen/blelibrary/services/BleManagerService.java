@@ -64,7 +64,7 @@ public class BleManagerService extends Service {
     private HashMap<String, ConnectBleDevice.BleBroadcastRecordMessage> mCurrentDeviceMap;
 
     private HashMap<String, String>  mSourceDeviceMapByMac;
-    private ArrayList<Bundle> mAllServices;
+    private ArrayList<BluetoothGattService> mAllServices;
     private boolean mAutoConnect, mIsScanning;
     private long mScanOvertime;
 
@@ -199,6 +199,7 @@ public class BleManagerService extends Service {
                 } else if (BluetoothProfile.STATE_DISCONNECTED == newState) {//断开操作成功
                     mCurrentGATT = null;
                     gatt.disconnect();
+                    gatt.close();
                 }
              } else if (BluetoothGatt.GATT_FAILURE == status) {//操作失败
                 if (null != mBleOpCallback) {
@@ -241,13 +242,7 @@ public class BleManagerService extends Service {
                         }
                         mAllServices = new ArrayList<>();
                         for (int service_index = 0; service_index < all_services.size(); service_index++){
-                            BluetoothGattService current_service = all_services.get(service_index);
-                            String service_uuid = current_service.getUuid().toString();
-                            String service_name = BleCommonUtils.lookupService(service_uuid);
-                            Bundle service_bundle = new Bundle();
-                            service_bundle.putString(BleLibsConfig.LE_SERVICE_NAME, service_name);
-                            service_bundle.putString(BleLibsConfig.LE_SERVICE_UUID, service_uuid);
-                            mAllServices.add(service_bundle);
+                            mAllServices.add(all_services.get(service_index));
                         }
                         if (null != mBleOpCallback) {
                             try {
@@ -491,7 +486,13 @@ public class BleManagerService extends Service {
             } else {
                 Bundle[] all_services_bundle = new Bundle[mAllServices.size()];
                 for (int service_index = 0; service_index < mAllServices.size(); service_index++){
-                    all_services_bundle[service_index] = mAllServices.get(service_index);
+                    Bundle service_bundle = new Bundle();
+                    String service_uuid = mAllServices.get(service_index).getUuid().toString();
+                    String service_name = BleCommonUtils.lookupService(service_uuid);
+                    BleLogUtils.outputServiceLog("BleOpImpl::getServices::process::uuid= " + service_uuid + " name= " + service_name);
+                    service_bundle.putString(BleLibsConfig.LE_SERVICE_UUID, service_uuid);
+                    service_bundle.putString(BleLibsConfig.LE_SERVICE_NAME, service_name);
+                    all_services_bundle[service_index] = service_bundle;
                 }
                 BleLogUtils.outputServiceLog("BleOpImpl::getServices::info::total= " + all_services_bundle.length);
                 return all_services_bundle;
@@ -500,7 +501,41 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[] getCharacteristic(String service_uuid) throws RemoteException {
-            return null;
+            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::params= " + service_uuid);
+            Bundle[] all_ch_bundle = null;
+            if (!TextUtils.isEmpty(service_uuid) && null != mAllServices && mAllServices.size() > 0){
+                for (BluetoothGattService current_service : mAllServices) {
+                    String current_service_uuid = current_service.getUuid().toString();
+                    List<BluetoothGattCharacteristic> current_ch_list = current_service.getCharacteristics();
+                    BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::Service= " + current_service_uuid +
+                                                " found ch total= " + ((null != current_ch_list && current_ch_list.size() > 0) ?
+                                                                        String.valueOf(current_ch_list.size()) : "-1"));
+                    if (service_uuid.equalsIgnoreCase(current_service_uuid) &&
+                            null != current_ch_list && current_ch_list.size() > 0) {
+                        all_ch_bundle = new Bundle[current_ch_list.size()];
+                        for (int ch_index = 0; ch_index < current_ch_list.size(); ch_index++) {
+                            BluetoothGattCharacteristic current_ch = current_ch_list.get(ch_index);
+                            String ch_uuid = current_ch.getUuid().toString();
+                            String ch_name = BleCommonUtils.lookupCharacteristic(ch_uuid);
+                            int    ch_permission = current_ch.getPermissions();
+                            int    ch_pro = current_ch.getProperties();
+                            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::ch= " + ch_uuid +
+                                    " name= " + ch_name + " permission= " + ch_permission + " pro= " + ch_pro + " index= " + ch_index);
+                            Bundle ch_bundle = new Bundle();
+                            ch_bundle.putString(BleLibsConfig.LE_CHARACTERISTIC_UUID, ch_uuid);
+                            ch_bundle.putString(BleLibsConfig.LE_CHARACTERISTIC_NAME, ch_name);
+                            ch_bundle.putInt(BleLibsConfig.LE_CHARACTERISTIC_PERMISSION, ch_permission);
+                            ch_bundle.putInt(BleLibsConfig.LE_CHARACTERISTIC_PROPERTIES, ch_pro);
+                            all_ch_bundle[ch_index] = ch_bundle;
+                        }
+                    }
+                    break;
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::service= " + service_uuid +
+                    " found ch total= " + ((null != all_ch_bundle && all_ch_bundle.length > 0) ?
+                    String.valueOf(all_ch_bundle.length) : "-1"));
+            return all_ch_bundle;
         }
 
         @Override
@@ -627,28 +662,178 @@ public class BleManagerService extends Service {
                     }
                 }
             }
-            BleLogUtils.outputServiceLog("connectToDevice::op_result= " + is_success);
+            BleLogUtils.outputServiceLog("BleOpImpl::connectToDevice::op_result= " + is_success);
             return is_success;
         }
 
         @Override
         public void initialNotification(String notification_uuid) throws RemoteException {
+            BleLogUtils.outputServiceLog("BleOpImpl::initialNotification::param= " + notification_uuid +
+                    " service_size= " + ((null != mAllServices && mAllServices.size() > 0) ? String.valueOf(mAllServices.size()) : "-1") +
+                    " has_connect= " + hasConnectToDevice());
+            BluetoothGattCharacteristic target_ch = null;
+            //设置之前必须外设处于连接状态，并且外设有一些服务
+            if (hasConnectToDevice() && null != mAllServices && mAllServices.size() > 0 &&
+                    !TextUtils.isEmpty(notification_uuid)) {
 
+                for (BluetoothGattService current_service : mAllServices) {
+                    List<BluetoothGattCharacteristic> ch_list = current_service.getCharacteristics();
+                    if (null != ch_list && ch_list.size() > 0 ) {
+                        for (BluetoothGattCharacteristic current_ch : ch_list) {
+                            String ch_uuid = current_ch.getUuid().toString();
+                            if (notification_uuid.equalsIgnoreCase(ch_uuid)) {
+                                target_ch = current_ch;
+                                break;
+                            }
+                        }
+                    }
+                    if (null != target_ch)
+                        break;
+                }
+                if (null != target_ch) {//如果已经找到特征
+                    boolean enable_ch = mCurrentGATT.setCharacteristicNotification(target_ch, true);
+                    BleLogUtils.outputServiceLog("BleOpImpl::initialNotification::enable= " + enable_ch);
+                    List<BluetoothGattDescriptor> all_ch_desc = target_ch.getDescriptors();
+                    if (null != all_ch_desc && all_ch_desc.size() > 0) {
+                        for (BluetoothGattDescriptor desc : all_ch_desc) {
+                            desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                            mCurrentGATT.writeDescriptor(desc);
+                        }
+                    }
+                    try {
+                        mBleOpCallback.onInitialNotification(true, notification_uuid);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        mBleOpCallback.onInitialNotification(false, notification_uuid);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                if (null != mBleOpCallback) {
+                    try {
+                        mBleOpCallback.onInitialNotification(false, notification_uuid);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
 
         @Override
         public boolean disconnect() throws RemoteException {
-            return false;
+            BleLogUtils.outputServiceLog("BleOpImpl::disconnect::gatt= " + mCurrentGATT);
+            if (null != mCurrentGATT) {
+                mCurrentGATT.disconnect();
+                mCurrentGATT.close();
+                mCurrentGATT = null;
+                return true;
+            } else {
+                return false;
+            }
         }
 
         @Override
         public boolean disconnectByName(String device_name) throws RemoteException{
-            return false;
+            boolean is_success = false;
+            int current_device_total = (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) ? mCurrentDeviceMap.size() : 0;
+            String target_mac = null;
+            if (!TextUtils.isEmpty(device_name) && current_device_total > 0){
+                Iterator<Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>> device_iterator =
+                        mCurrentDeviceMap.entrySet().iterator();
+
+                while (device_iterator.hasNext()) {
+                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry = device_iterator.next();
+                    String current_device_mac = device_entry.getKey();
+                    String current_device_name = device_entry.getValue().getDeviceMac();
+                    BleLogUtils.outputServiceLog("BleOpImpl::disconnectByName::found= " + current_device_name +
+                                                " current_device_mac= " + current_device_mac);
+                    if (device_name.equalsIgnoreCase(current_device_name)) {
+                        target_mac = current_device_mac;
+                        break;
+                    }
+                }
+
+                //如果已经找到设备
+                if (TextUtils.isEmpty(target_mac)) {
+                    //容错：防止适配器为NULL
+                    if (null == mBleAdapter){
+                        mBleAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
+                    }
+
+                    //如果已经存在已经连接的外设，先断开李连接
+                    if (hasConnectToDevice()) {
+                        mCurrentGATT.disconnect();
+                        mCurrentGATT.close();
+                        mCurrentGATT = null;
+                        mCurrentDevice = null;
+                    }
+
+                    mCurrentDevice = mBleAdapter.getRemoteDevice(target_mac);
+                    if (null != mCurrentDevice) {
+                        mCurrentGATT = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
+                        if (null != mCurrentGATT) {
+                            is_success = true;
+                        }
+                    }
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::disconnectByName::param= " + device_name +
+                    " result= " + is_success + " device_size= " + current_device_total);
+            return is_success;
         }
 
         @Override
         public boolean disconnectByMac(String device_mac) throws RemoteException{
-            return false;
+            boolean is_success = false;
+            int current_device_total = (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) ? mCurrentDeviceMap.size() : 0;
+            String target_mac = null;
+            if (!TextUtils.isEmpty(device_mac) && current_device_total > 0){
+                Iterator<Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>> device_iterator =
+                        mCurrentDeviceMap.entrySet().iterator();
+
+                while (device_iterator.hasNext()) {
+                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry = device_iterator.next();
+                    String current_device_mac = device_entry.getKey();
+                    String current_device_name = device_entry.getValue().getDeviceMac();
+                    BleLogUtils.outputServiceLog("BleOpImpl::disconnectByMac::found= " + current_device_name +
+                            " current_device_mac= " + current_device_mac);
+                    if (device_mac.equalsIgnoreCase(current_device_mac)) {
+                        target_mac = current_device_mac;
+                        break;
+                    }
+                }
+
+                //如果已经找到设备
+                if (TextUtils.isEmpty(target_mac)) {
+                    //容错：防止适配器为NULL
+                    if (null == mBleAdapter){
+                        mBleAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
+                    }
+
+                    //如果已经存在已经连接的外设，先断开李连接
+                    if (hasConnectToDevice()) {
+                        mCurrentGATT.disconnect();
+                        mCurrentGATT.close();
+                        mCurrentGATT = null;
+                        mCurrentDevice = null;
+                    }
+
+                    mCurrentDevice = mBleAdapter.getRemoteDevice(target_mac);
+                    if (null != mCurrentDevice) {
+                        mCurrentGATT = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
+                        if (null != mCurrentGATT) {
+                            is_success = true;
+                        }
+                    }
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::disconnectByMac::param= " + device_mac +
+                    " result= " + is_success + " device_size= " + current_device_total);
+            return is_success;
         }
 
         @Override
@@ -680,7 +865,7 @@ public class BleManagerService extends Service {
         @Override
         public boolean hasConnectToDevice() throws RemoteException {
             boolean has_connect;
-            if (null != mCurrentGATT) {
+            if (null != mCurrentGATT && null != mCurrentDevice) {
                 has_connect = true;
             }else {
                 has_connect = false;
