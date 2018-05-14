@@ -584,11 +584,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     @Override
-    public void onReadCharacteristic(boolean is_success, String ch_uuid, int read_step, byte[] ble_value) throws RemoteException {
+    public void onReadCharacteristic(boolean is_success, String ch_uuid, byte[] ble_value) throws RemoteException {
         BleLogUtils.outputManagerLog("onReadCharacteristic::success= " + is_success + " uuid= " + ch_uuid +
-                                    " step= " + read_step + " value= " + Arrays.toString(ble_value));
+                                   " value= " + Arrays.toString(ble_value));
         if (null != mClientCallback) {
-            mClientCallback.onReadCh(read_step, is_success, ch_uuid, ble_value);
+            mClientCallback.onReadCh(0, is_success, ch_uuid, ble_value);
         }
     }
 
@@ -598,11 +598,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     @Override
-    public void onWriteCharacteristic(boolean is_success, String ch_uuid, int write_step, byte[] ble_value) throws RemoteException {
+    public void onWriteCharacteristic(boolean is_success, String ch_uuid, byte[] ble_value) throws RemoteException {
         BleLogUtils.outputManagerLog("onWriteCharacteristic::success= " + is_success + " uuid= " + ch_uuid +
-                " step= " + write_step + " value= " + Arrays.toString(ble_value));
+                " value= " + Arrays.toString(ble_value));
         if (null != mClientCallback) {
-            mClientCallback.onWriteCh(write_step, is_success, ch_uuid, ble_value);
+            mClientCallback.onWriteCh(0, is_success, ch_uuid, ble_value);
         }
     }
 

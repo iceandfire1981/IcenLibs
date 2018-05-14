@@ -151,9 +151,7 @@ public class BleManagerService extends Service {
             device_builder.setDeviceClass(device_class);
             device_builder.setDeviceRssi(rssi);
             device_builder.setBroadcastContent(ByteString.copyFrom(bytes));
-
             mCurrentDeviceMap.put(device_mac, device_builder.build());
-
             if (null != mBleOpCallback) {
                 try {
                     mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_DOING, bluetoothDevice.getName(),
@@ -184,7 +182,8 @@ public class BleManagerService extends Service {
          @Override
          public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
              super.onConnectionStateChange(gatt, status, newState);
-             BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status + " new_status= " + newState);
+             BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+                     " new_status= " + newState);
              if (BluetoothGatt.GATT_SUCCESS == status) {//操作成功
                 if (BluetoothProfile.STATE_CONNECTED == newState) {//外设连接成功
                     mCurrentGATT = gatt;
@@ -258,16 +257,63 @@ public class BleManagerService extends Service {
          @Override
          public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
              super.onCharacteristicRead(gatt, characteristic, status);
+             byte[] return_bytes = characteristic.getValue();
+
+             BleLogUtils.outputServiceLog("BluetoothGattCallback::onCharacteristicRead::uuid= " + characteristic.getUuid().toString() +
+                                " status= " + status + " value= " +
+                                ((null == return_bytes || return_bytes.length < 0) ?
+                                        "No data here" : Arrays.toString(return_bytes)));
+
+             if (null != mBleOpCallback) {
+                 try {
+                     mBleOpCallback.onReadCharacteristic((status == BluetoothGatt.GATT_SUCCESS),
+                             characteristic.getUuid().toString(),
+                             characteristic.getValue());
+                 } catch (RemoteException e) {
+                     e.printStackTrace();
+                 }
+             }
          }
 
          @Override
          public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
              super.onCharacteristicWrite(gatt, characteristic, status);
+             byte[] return_bytes = characteristic.getValue();
+
+             BleLogUtils.outputServiceLog("BluetoothGattCallback::onCharacteristicWrite::uuid= " +
+                     characteristic.getUuid().toString() +
+                     " status= " + status + " value= " +
+                     ((null == return_bytes || return_bytes.length < 0) ?
+                             "No data here" : Arrays.toString(return_bytes)));
+
+             if (null != mBleOpCallback) {
+                 try {
+                     mBleOpCallback.onWriteCharacteristic((status == BluetoothGatt.GATT_SUCCESS),
+                             characteristic.getUuid().toString(),
+                             characteristic.getValue());
+                 } catch (RemoteException e) {
+                     e.printStackTrace();
+                 }
+             }
          }
 
          @Override
          public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
              super.onCharacteristicChanged(gatt, characteristic);
+             byte[] return_bytes = characteristic.getValue();
+
+             BleLogUtils.outputServiceLog("BluetoothGattCallback::onCharacteristicWrite::uuid= " +
+                     characteristic.getUuid().toString() +
+                     " value= " +
+                     ((null == return_bytes || return_bytes.length < 0) ?
+                             "No data here" : Arrays.toString(return_bytes)));
+             if (null != mBleOpCallback) {
+                 try {
+                     mBleOpCallback.onCharacteristicChange(true, characteristic.getUuid().toString(), characteristic.getValue());
+                 } catch (RemoteException e) {
+                     e.printStackTrace();
+                 }
+             }
          }
 
          @Override
@@ -353,7 +399,9 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[] getDeviceInfo(){
-            BleLogUtils.outputServiceLog("getDeviceInfo::size= " + (null != mCurrentDeviceMap ? String.valueOf(mCurrentDeviceMap.size()) : "-1"));
+            BleLogUtils.outputServiceLog("getDeviceInfo::size= " +
+                    (null != mCurrentDeviceMap ? String.valueOf(mCurrentDeviceMap.size()) : "-1"));
+
             if (null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) {
                 BleLogUtils.outputServiceLog("getDeviceInfo::info::There are no devices here");
                 return null;
@@ -838,22 +886,124 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean readCharacteristic(String read_uuid) throws RemoteException {
-            return false;
+            boolean is_success = false;
+            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            if (!TextUtils.isEmpty(read_uuid) && service_list_count > 0) {
+                BluetoothGattCharacteristic target_ch = null;
+                for (BluetoothGattService current_service : mAllServices) {
+                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                    if (null != ch_in_service && ch_in_service.size() > 0) {
+                        for (BluetoothGattCharacteristic current_ch : ch_in_service) {
+                            String ch_uuid = current_ch.getUuid().toString();
+                            if (read_uuid.equalsIgnoreCase(ch_uuid)){
+                                target_ch = current_ch;
+                                break;
+                            }
+                        }
+                    }
+                    if (null != target_ch)
+                        break;
+                }
+
+                if (null != target_ch) {
+                    is_success = mCurrentGATT.readCharacteristic(target_ch);
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::readCharacteristic::uuid= " + read_uuid + " result= " + is_success);
+            return is_success;
         }
 
         @Override
         public boolean writeCharacteristic(String write_uuid, byte[] write_content) throws RemoteException {
-            return false;
+            boolean is_success = false;
+            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
+                BluetoothGattCharacteristic target_ch = null;
+                for (BluetoothGattService current_service : mAllServices) {
+                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                    if (null != ch_in_service && ch_in_service.size() > 0) {
+                        for (BluetoothGattCharacteristic current_ch : ch_in_service) {
+                            String ch_uuid = current_ch.getUuid().toString();
+                            if (write_uuid.equalsIgnoreCase(ch_uuid)){
+                                target_ch = current_ch;
+                                break;
+                            }
+                        }
+                    }
+                    if (null != target_ch)
+                        break;
+                }
+
+                if (null != target_ch) {
+                    target_ch.setValue(write_content);
+                    is_success = mCurrentGATT.writeCharacteristic(target_ch);
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::writeCharacteristic::uuid= " + write_uuid + " result= "
+                    + is_success + " content= " + Arrays.toString(write_content));
+            return is_success;
         }
 
         @Override
         public boolean writeCharacteristicString(String write_uuid, String write_content) throws RemoteException {
-            return false;
+            boolean is_success = false;
+            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
+                BluetoothGattCharacteristic target_ch = null;
+                for (BluetoothGattService current_service : mAllServices) {
+                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                    if (null != ch_in_service && ch_in_service.size() > 0) {
+                        for (BluetoothGattCharacteristic current_ch : ch_in_service) {
+                            String ch_uuid = current_ch.getUuid().toString();
+                            if (write_uuid.equalsIgnoreCase(ch_uuid)){
+                                target_ch = current_ch;
+                                break;
+                            }
+                        }
+                    }
+                    if (null != target_ch)
+                        break;
+                }
+
+                if (null != target_ch) {
+                    target_ch.setValue(write_content);
+                    is_success = mCurrentGATT.writeCharacteristic(target_ch);
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::writeCharacteristic1::uuid= " + write_uuid + " result= "
+                    + is_success + " content= " + write_content);
+            return is_success;
         }
 
         @Override
         public boolean writeCharacteristicInt(String write_uuid, int write_content, int content_format) throws RemoteException {
-            return false;
+            boolean is_success = false;
+            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
+                BluetoothGattCharacteristic target_ch = null;
+                for (BluetoothGattService current_service : mAllServices) {
+                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                    if (null != ch_in_service && ch_in_service.size() > 0) {
+                        for (BluetoothGattCharacteristic current_ch : ch_in_service) {
+                            String ch_uuid = current_ch.getUuid().toString();
+                            if (write_uuid.equalsIgnoreCase(ch_uuid)){
+                                target_ch = current_ch;
+                                break;
+                            }
+                        }
+                    }
+                    if (null != target_ch)
+                        break;
+                }
+
+                if (null != target_ch) {
+                    target_ch.setValue(write_content, content_format, 0);
+                    is_success = mCurrentGATT.writeCharacteristic(target_ch);
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::writeCharacteristic2::uuid= " + write_uuid + " result= "
+                    + is_success + " content= " + write_content);
+            return is_success;
         }
 
         @Override
