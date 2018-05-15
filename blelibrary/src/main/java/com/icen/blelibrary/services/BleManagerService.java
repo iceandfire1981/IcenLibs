@@ -197,7 +197,6 @@ public class BleManagerService extends Service {
                     }
                 } else if (BluetoothProfile.STATE_DISCONNECTED == newState) {//断开操作成功
                     mCurrentGATT = null;
-                    gatt.disconnect();
                     gatt.close();
                 }
              } else if (BluetoothGatt.GATT_FAILURE == status) {//操作失败
