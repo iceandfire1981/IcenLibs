@@ -30,12 +30,12 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
 
     private Activity mContext;
     private IBleOp mBleOp;
-
     private BleManagerCallBack mClientCallback;
 
     public BleManager(Activity ctx){
         mContext = ctx;
         mClientCallback = null;
+        mBleOp = null;
     }
 
     /**
@@ -361,11 +361,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
      * @param remote_address
      * @return
      */
-    public boolean connectToDevice(String remote_address){
+    public boolean connectToDevice(boolean force_connect, String remote_address){
         boolean is_success = false;
         if (isReady()){
             try {
-                is_success = mBleOp.connectToDevice(remote_address);
+                is_success = mBleOp.connectToDevice(force_connect, remote_address);
             } catch (Exception e){
                 e.printStackTrace();
             }
@@ -557,6 +557,7 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
                                     " scan_process= " + scan_process);
         if (null != mClientCallback)
             mClientCallback.onLEScan(scan_process, device_name, device_class, device_address, device_rssi, broadcast_content);
+
     }
 
     @Override

@@ -16,7 +16,7 @@ interface IBleOp {
     boolean bleSwitcher(boolean enabled);
     boolean startDiscoveryDevice();
     void stopDiscoveryDevice();
-    boolean connectToDevice(String remote_address);
+    boolean connectToDevice(boolean force_connect, String remote_address);
     void initialNotification(String notification_uuid);
     boolean disconnect();
     boolean disconnectByName(String device_name);

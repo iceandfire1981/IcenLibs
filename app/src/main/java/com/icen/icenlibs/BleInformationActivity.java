@@ -84,7 +84,7 @@ public class BleInformationActivity extends AppCompatActivity
         else {
             if (mBleManager.isLeEnabled()) {
                 mTVDeviceMac.setText(R.string.ble_common_connecting);
-                mBleManager.connectToDevice(mTargetAddress);
+                mBleManager.connectToDevice(true, mTargetAddress);
             } else {
                 mTVDeviceMac.setText(R.string.ble_common_le_not_enable);
             }

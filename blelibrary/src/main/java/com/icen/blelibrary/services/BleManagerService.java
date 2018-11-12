@@ -63,7 +63,7 @@ public class BleManagerService extends Service {
 
     private HashMap<String, ConnectBleDevice.BleBroadcastRecordMessage> mCurrentDeviceMap;
 
-    private HashMap<String, String>  mSourceDeviceMapByMac;
+    private String mSourceDeviceName, mSourceDeviceMAC;
     private ArrayList<BluetoothGattService> mAllServices;
     private boolean mAutoConnect, mIsScanning;
     private long mScanOvertime;
@@ -381,7 +381,8 @@ public class BleManagerService extends Service {
     }
 
     private void initialSystemConfig(){
-        mSourceDeviceMapByMac = BleLibsConfig.getDeviceListInFile(BleManagerService.this);
+        mSourceDeviceName = BleLibsConfig.getDeviceNameInFile(this);
+        mSourceDeviceMAC = BleLibsConfig.getDeviceMacInFile(this);
         mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
         mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
         mIsScanning = false;
@@ -623,6 +624,8 @@ public class BleManagerService extends Service {
             //扫描开始前先确认参数：是否自动重连，扫描超时时长
             mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
             mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
+            mSourceDeviceMAC = BleLibsConfig.getDeviceMacInFile(BleManagerService.this);
+
 
             boolean is_success = false;
             if (null != mBleAdapter) {
@@ -646,8 +649,16 @@ public class BleManagerService extends Service {
                     @Override
                     public void run() {
                         try {
-                            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::overtime now" );
-                            stopDiscoveryDevice();
+                            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::overtime now, auto= " +
+                                    mAutoConnect + " connected= " + hasConnectToDevice());
+                            stopDiscoveryDevice();//停止扫描
+                            //在没有连接任何设备的情况下自动连接上次成功连接并且当前存在的设备
+                            if (mAutoConnect && !hasConnectToDevice()){
+                                Bundle[] device_list = getDeviceInfoByAddress(mSourceDeviceMAC);
+                                if (null != device_list && device_list.length > 0){
+                                    connectToDevice(false, mSourceDeviceMAC);
+                                }
+                            }
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
@@ -673,14 +684,13 @@ public class BleManagerService extends Service {
             if (null != mBleOpCallback)
                 mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_END, null, null,
                         null, DEFAULT_RSSI, null);
-
         }
 
         @Override
-        public boolean connectToDevice(String remote_address) throws RemoteException {
+        public boolean connectToDevice(boolean force_connect, final String remote_address) throws RemoteException {
             boolean is_success;
             BleLogUtils.outputServiceLog("BleOpImpl::connectToDevice::info::address= " + remote_address +
-                                        " Scanning= " + mIsScanning + " connect= " + hasConnectToDevice());
+                                        " Scanning= " + mIsScanning + " connect= " + hasConnectToDevice() + " f_c= " + force_connect);
 
             //连接开始前需要停止扫描
             if (mIsScanning){
@@ -690,7 +700,22 @@ public class BleManagerService extends Service {
 
             //如果当前已经连接一个外设则开始刷新外设服务（Service）列表
             if (hasConnectToDevice()) {
-                is_success = mCurrentGATT.discoverServices();
+                if (force_connect) {
+                    disconnect();//断开连接
+                    mServiceHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                connectToDevice(false, remote_address);
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }, 3000);
+                    return true;
+                } else {
+                    is_success = mCurrentGATT.discoverServices();
+                }
             } else {
                 //容错：防止适配器为NULL
                 if (null == mBleAdapter){

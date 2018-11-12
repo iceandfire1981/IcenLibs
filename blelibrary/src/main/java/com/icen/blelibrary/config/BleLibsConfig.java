@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -77,9 +78,14 @@ public final class BleLibsConfig {
      */
     private static final String BLE_CONFIG_SCAN_TIMEOUT = "ble_config_scan_overtime";
     /**
-     * 成功连接的设备列表
+     * 成功连接的设备名称
      */
-    private static final String BLE_CONFIG_DEVICE_LIST = "ble_config_device_list";
+    private static final String BLE_CONFIG_DEVICE_NAME = "ble_config_device_name";
+
+    /**
+     * 成功链接的设备MAC地址
+     */
+    private static final String BLE_CONFIG_DEVICE_MAC = "ble_config_device_mac";
 
     /**
      * 广播数据消息配置：设备名称
@@ -187,70 +193,35 @@ public final class BleLibsConfig {
      * @param current_device_mac  设备MAC地址
      */
     public static final void saveDeviceInFile(Context ctx, String current_device_name, String current_device_mac) {
-        if (!TextUtils.isEmpty(current_device_name) && !TextUtils.isEmpty(current_device_mac)) {
-            HashMap<String, String> device_map = getDeviceListInFile(ctx);
-            current_device_mac = current_device_mac.toLowerCase(Locale.getDefault());
-            if (null != device_map && device_map.size() > 0) {
-                device_map.put(current_device_mac, current_device_name);
-            } else {
-                device_map = new HashMap<>();
-                device_map.put(current_device_mac, current_device_name);
-            }
-            mapToDeviceRecord(ctx, device_map);
-        }
-        BleLogUtils.outputUtilLog("BleLibsConfig::getDeviceNameInFile::name " + current_device_name
-                + " mac= " + current_device_mac);
-    }
-
-
-    /**
-     * 生成设备列表
-     * 记录格式：device1%xxxx:xxxxx:xxxx:xxxx|device2%xxxx:xxxxx:xxxx:xxxx
-     * @param ctx 上下文
-     * @return 设备列表MAC-NAME Map
-     */
-    public static final HashMap<String, String> getDeviceListInFile(Context ctx) {
-        String device_list_str = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
-                .getString(BLE_CONFIG_DEVICE_LIST, "");
-        BleLogUtils.outputUtilLog("BleLibsConfig::getDeviceListByNameInFile= " + device_list_str);
-        if (TextUtils.isEmpty(device_list_str)){
-            return null;
+        String save_device_mac = getDeviceMacInFile(ctx);
+        boolean is_same_device;
+        if (TextUtils.isEmpty(save_device_mac)) {
+            is_same_device = false;
         } else {
-            String[] device_list = device_list_str.split(BLE_DEVICE_SPILT);
-            BleLogUtils.outputUtilLog("BleLibsConfig::getDeviceListByNameInFile::device_count= " + device_list.length);
-            HashMap<String, String> device_map = new HashMap<>();
-            for (String one_device_info : device_list) {
-                String[] device_info = one_device_info.split(BLE_DEVICE_INFO_SPILT);
-                BleLogUtils.outputUtilLog("BleLibsConfig::getDeviceListByNameInFile::name= " + device_info[0] +
-                        " mac= " + device_info[1]);
-                device_map.put(device_info[1], device_info[0]);
+            if (save_device_mac.equalsIgnoreCase(current_device_mac)){
+                is_same_device = true;
+            } else {
+                is_same_device = false;
             }
-            return device_map;
+        }
+
+        if (!is_same_device){
+            SharedPreferences.Editor editor =  ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit();
+            editor.putString(BLE_CONFIG_DEVICE_NAME, current_device_name);
+            editor.putString(BLE_CONFIG_DEVICE_MAC, current_device_mac);
+            editor.commit();
         }
     }
 
-    /**
-     * 生成设备列表的记录
-     * @param ctx
-     * @param device_map
-     */
-    private static final void mapToDeviceRecord(Context ctx, @NonNull  HashMap<String, String> device_map){
-        int device_size = ((null != device_map) ? device_map.size() : -1);
-        BleLogUtils.outputUtilLog("BleLibsConfig::mapToDeviceRecord= " + device_size);
-        if (device_size <= 0) {
-            Iterator<Map.Entry<String, String>> device_iterator = device_map.entrySet().iterator();
-            StringBuffer device_list_buffer = new StringBuffer();
-            while (device_iterator.hasNext()) {
-                Map.Entry<String, String> device_entry = device_iterator.next();
-                String device_mac = device_entry.getKey();
-                String device_name = device_entry.getValue();
-                String device_info_str = device_mac + BLE_DEVICE_INFO_SPILT + device_name;
-                device_list_buffer.append(device_info_str + BLE_DEVICE_SPILT);
-            }
-            BleLogUtils.outputUtilLog("BleLibsConfig::mapToDeviceRecord::Result= " + device_list_buffer.toString());
-            ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
-                    .putString(BLE_CONFIG_DEVICE_LIST, device_list_buffer.toString())
-                    .commit();
-        }
+    public static final String getDeviceNameInFile(Context ctx){
+        String device_name = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).
+                getString(BLE_CONFIG_DEVICE_NAME, "");
+        return device_name;
+    }
+
+    public static final String getDeviceMacInFile(Context ctx) {
+        String device_mac = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).
+                getString(BLE_CONFIG_DEVICE_MAC, "");
+        return device_mac;
     }
 }
