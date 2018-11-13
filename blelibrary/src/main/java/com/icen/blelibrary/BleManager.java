@@ -407,44 +407,6 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     }
 
     /**
-     * 切断与指定外设名称的LE外设的连接
-     * 如果参数为NULL，与disconnect效果相同
-     * @param device_name LE外设名称，扫描阶段提供
-     * @return
-     */
-    public boolean disconnectByName(String device_name){
-        boolean is_success = false;
-        if (isReady()) {
-            try {
-                is_success = mBleOp.disconnectByName(device_name);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        BleLogUtils.outputManagerLog(" disconnectByName::System Ready= " + isReady() + " result= " + is_success);
-        return is_success;
-    }
-
-    /**
-     * 切断与指定MAC地址的LE外设的连接
-     * 如果参数为NULL，与disconnect效果相同
-     * @param device_mac LE外设MAC地址，扫描阶段提供
-     * @return
-     */
-    public boolean disconnectByMac(String device_mac){
-        boolean is_success = false;
-        if (isReady()) {
-            try {
-                is_success = mBleOp.disconnectByName(device_mac);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        BleLogUtils.outputManagerLog(" disconnectByMac::System Ready= " + isReady() + " result= " + is_success);
-        return is_success;
-    }
-
-    /**
      * 向指定的特征发送读指令。
      * 【异步方法】
      * @param read_uuid 读信息的UUID

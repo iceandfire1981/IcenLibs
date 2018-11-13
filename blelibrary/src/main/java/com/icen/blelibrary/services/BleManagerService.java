@@ -702,6 +702,7 @@ public class BleManagerService extends Service {
             if (hasConnectToDevice()) {
                 if (force_connect) {
                     disconnect();//断开连接
+                    //3秒后重连
                     mServiceHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -806,106 +807,6 @@ public class BleManagerService extends Service {
             } else {
                 return false;
             }
-        }
-
-        @Override
-        public boolean disconnectByName(String device_name) throws RemoteException{
-            boolean is_success = false;
-            int current_device_total = (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) ? mCurrentDeviceMap.size() : 0;
-            String target_mac = null;
-            if (!TextUtils.isEmpty(device_name) && current_device_total > 0){
-                Iterator<Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>> device_iterator =
-                        mCurrentDeviceMap.entrySet().iterator();
-
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry = device_iterator.next();
-                    String current_device_mac = device_entry.getKey();
-                    String current_device_name = device_entry.getValue().getDeviceMac();
-                    BleLogUtils.outputServiceLog("BleOpImpl::disconnectByName::found= " + current_device_name +
-                                                " current_device_mac= " + current_device_mac);
-                    if (device_name.equalsIgnoreCase(current_device_name)) {
-                        target_mac = current_device_mac;
-                        break;
-                    }
-                }
-
-                //如果已经找到设备
-                if (TextUtils.isEmpty(target_mac)) {
-                    //容错：防止适配器为NULL
-                    if (null == mBleAdapter){
-                        mBleAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
-                    }
-
-                    //如果已经存在已经连接的外设，先断开李连接
-                    if (hasConnectToDevice()) {
-                        mCurrentGATT.disconnect();
-                        mCurrentGATT.close();
-                        mCurrentGATT = null;
-                        mCurrentDevice = null;
-                    }
-
-                    mCurrentDevice = mBleAdapter.getRemoteDevice(target_mac);
-                    if (null != mCurrentDevice) {
-                        mCurrentGATT = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
-                        if (null != mCurrentGATT) {
-                            is_success = true;
-                        }
-                    }
-                }
-            }
-            BleLogUtils.outputServiceLog("BleOpImpl::disconnectByName::param= " + device_name +
-                    " result= " + is_success + " device_size= " + current_device_total);
-            return is_success;
-        }
-
-        @Override
-        public boolean disconnectByMac(String device_mac) throws RemoteException{
-            boolean is_success = false;
-            int current_device_total = (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) ? mCurrentDeviceMap.size() : 0;
-            String target_mac = null;
-            if (!TextUtils.isEmpty(device_mac) && current_device_total > 0){
-                Iterator<Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>> device_iterator =
-                        mCurrentDeviceMap.entrySet().iterator();
-
-                while (device_iterator.hasNext()) {
-                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry = device_iterator.next();
-                    String current_device_mac = device_entry.getKey();
-                    String current_device_name = device_entry.getValue().getDeviceMac();
-                    BleLogUtils.outputServiceLog("BleOpImpl::disconnectByMac::found= " + current_device_name +
-                            " current_device_mac= " + current_device_mac);
-                    if (device_mac.equalsIgnoreCase(current_device_mac)) {
-                        target_mac = current_device_mac;
-                        break;
-                    }
-                }
-
-                //如果已经找到设备
-                if (TextUtils.isEmpty(target_mac)) {
-                    //容错：防止适配器为NULL
-                    if (null == mBleAdapter){
-                        mBleAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
-                    }
-
-                    //如果已经存在已经连接的外设，先断开李连接
-                    if (hasConnectToDevice()) {
-                        mCurrentGATT.disconnect();
-                        mCurrentGATT.close();
-                        mCurrentGATT = null;
-                        mCurrentDevice = null;
-                    }
-
-                    mCurrentDevice = mBleAdapter.getRemoteDevice(target_mac);
-                    if (null != mCurrentDevice) {
-                        mCurrentGATT = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
-                        if (null != mCurrentGATT) {
-                            is_success = true;
-                        }
-                    }
-                }
-            }
-            BleLogUtils.outputServiceLog("BleOpImpl::disconnectByMac::param= " + device_mac +
-                    " result= " + is_success + " device_size= " + current_device_total);
-            return is_success;
         }
 
         @Override
