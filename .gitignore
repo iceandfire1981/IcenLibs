@@ -18,3 +18,4 @@ blelibrary/src/main/gen/com/icen/blelibrary/R.java
 pluginlibrary/src/main/gen/com/icen/pluginlibrary/BuildConfig.java
 pluginlibrary/src/main/gen/com/icen/pluginlibrary/Manifest.java
 pluginlibrary/src/main/gen/com/icen/pluginlibrary/R.java
+.idea/misc.xml

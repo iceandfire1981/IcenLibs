@@ -77,7 +77,6 @@ public class BleManagerService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             String current_action = (null == intent) ? null : intent.getAction();
-
             BleLogUtils.outputServiceLog("mBleStateReceiver::onReceive::Action= " +
                     (!TextUtils.isEmpty(current_action) ? current_action : "No Action Here"));
             if (BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED.equals(current_action)) {//处理连接状态的ACTION
@@ -145,7 +144,8 @@ public class BleManagerService extends Service {
                     " name= " + device_name + " class= " + device_class +
                     " rssi= " + rssi + " content= " + ((null == bytes || bytes.length <= 0) ? "No Record" : Arrays.toString(bytes)));
 
-            ConnectBleDevice.BleBroadcastRecordMessage.Builder device_builder = ConnectBleDevice.BleBroadcastRecordMessage.newBuilder();
+            ConnectBleDevice.BleBroadcastRecordMessage.Builder device_builder =
+                    ConnectBleDevice.BleBroadcastRecordMessage.newBuilder();
             device_builder.setDeviceName(device_name);
             device_builder.setDeviceMac(device_mac);
             device_builder.setDeviceClass(device_class);
@@ -213,7 +213,7 @@ public class BleManagerService extends Service {
          @Override
          public void onServicesDiscovered(BluetoothGatt gatt, int status) {
              super.onServicesDiscovered(gatt, status);
-             BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+             BleLogUtils.outputServiceLog("gatt_callback::onServicesDiscovered::status= " + status +
                      " name= " + gatt.getDevice().getName() +
                      " address = " + gatt.getDevice().getAddress());
              if (BluetoothGatt.GATT_FAILURE == status) {//操作失败
@@ -249,6 +249,9 @@ public class BleManagerService extends Service {
                                 e.printStackTrace();
                             }
                         }
+                        //保存连接信息
+                        BleLibsConfig.saveDeviceInFile(BleManagerService.this,
+                                gatt.getDevice().getName(), gatt.getDevice().getAddress());
                     }
              }
          }
@@ -430,7 +433,9 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[]   getDeviceInfoByAddress(String device_mac){
-            if (null != mCurrentDeviceMap || mCurrentDeviceMap.size() > 0) {
+            BleLogUtils.outputServiceLog("getDeviceInfoByAddress::mac= " + device_mac + " size= " +
+                    ((null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) ? "-1" : mCurrentDeviceMap.size()));
+            if (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) {
                 if (!TextUtils.isEmpty(device_mac)) {
                     Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
                     while (device_iterator.hasNext()) {
@@ -478,8 +483,10 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[] getDeviceInfoByName(String device_name){
+            BleLogUtils.outputServiceLog("getDeviceInfoByName::name= " + device_name + " size= " +
+                    ((null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) ? "-1" : mCurrentDeviceMap.size()));
             ArrayList<Bundle> device_list = new ArrayList();
-            if (null != mCurrentDeviceMap || mCurrentDeviceMap.size() > 0) {
+            if (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) {
                 Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
                 if (TextUtils.isEmpty(device_name)){
                     while (device_iterator.hasNext()) {
