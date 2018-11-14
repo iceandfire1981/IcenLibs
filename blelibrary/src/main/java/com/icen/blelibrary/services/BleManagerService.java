@@ -31,6 +31,8 @@ import com.icen.blelibrary.config.ConnectBleDevice;
 import com.icen.blelibrary.utils.BleCommonUtils;
 import com.icen.blelibrary.utils.BleLogUtils;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -401,21 +403,52 @@ public class BleManagerService extends Service {
         }
 
         @Override
-        public Bundle[] getDeviceInfo(){
-            BleLogUtils.outputServiceLog("getDeviceInfo::size= " +
-                    (null != mCurrentDeviceMap ? String.valueOf(mCurrentDeviceMap.size()) : "-1"));
+        public boolean isSupportLE(){
+            boolean is_support = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            BleLogUtils.outputServiceLog("isSupportLE::result= " + is_support);
+            return is_support;
+        }
 
-            if (null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) {
-                BleLogUtils.outputServiceLog("getDeviceInfo::info::There are no devices here");
-                return null;
-            } else {
+        @Override
+        public boolean leIsEnable() throws RemoteException {
+            boolean is_enable = false;
+            if (null != mBleAdapter) {
+                is_enable = mBleAdapter.isEnabled();
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::leIsEnable::result= " + is_enable);
+            return is_enable;
+        }
+
+        @Override
+        public boolean bleSwitcher(boolean enabled) throws RemoteException {
+            boolean is_success = false;
+
+            if (null != mBleAdapter) {
+                stopDiscoveryDevice();
+                if (enabled)
+                    is_success = mBleAdapter.enable();
+                else {
+                    is_success = mBleAdapter.disable();
+                }
+            }
+            BleLogUtils.outputServiceLog("BleOpImpl::bleSwitcher::enabled= " + enabled + " result= " + is_success);
+            return is_success;
+        }
+
+        @Override
+        public Bundle[] getDeviceInfo(){
+            int device_size = (null == mCurrentDeviceMap || mCurrentDeviceMap.size() == 0) ?
+                    -1 : mCurrentDeviceMap.size();
+            BleLogUtils.outputServiceLog("BleOpImpl::getDeviceInfo::device_size= " + device_size);
+
+            if (device_size > 0) {
                 Bundle[] device_bundles = new Bundle[mCurrentDeviceMap.size()];
                 int device_index = 0;
                 Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
                 while (device_iterator.hasNext()){
                     Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> device_entry =
                             (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
-                    BleLogUtils.outputServiceLog("getDeviceInfo::key= " + device_entry.getKey());
+
                     Bundle device_info = new Bundle();
                     device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, device_entry.getValue().getDeviceName());
                     device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, device_entry.getValue().getDeviceMac());
@@ -428,41 +461,24 @@ public class BleManagerService extends Service {
                     device_index = device_index + 1;
                 }
                 return device_bundles;
+            } else {
+                return null;
             }
         }
 
         @Override
         public Bundle[]   getDeviceInfoByAddress(String device_mac){
-            BleLogUtils.outputServiceLog("getDeviceInfoByAddress::mac= " + device_mac + " size= " +
-                    ((null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) ? "-1" : mCurrentDeviceMap.size()));
-            if (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) {
-                if (!TextUtils.isEmpty(device_mac)) {
-                    Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
-                    while (device_iterator.hasNext()) {
-                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
-                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
-                        String current_mac = entry.getValue().getDeviceMac();
-                        if (device_mac.equalsIgnoreCase(current_mac)) {
-                            Bundle device_info = new Bundle();
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
-                            device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
-                            byte[] content_bytes = null;
-                            entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
-                            device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
-                            Bundle[] result_device_list = new Bundle[1];
-                            result_device_list[0] = device_info;
-                            return result_device_list;
-                        }
-                    }
-                } else {
-                    Bundle[] le_device_list = new Bundle[mCurrentDeviceMap.size()];
-                    int le_devices_index = 0;
-                    Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
-                    while (device_iterator.hasNext()) {
-                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
-                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
+            int device_size = (null == mCurrentDeviceMap || mCurrentDeviceMap.size() == 0) ?
+                    -1 : mCurrentDeviceMap.size();
+            BleLogUtils.outputServiceLog("BleOpImpl::getDeviceInfoByAddress::mac= " + device_mac + " device_size= " + device_size);
+
+            if (device_size > 0 && !TextUtils.isEmpty(device_mac)) {
+                Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
+                while (device_iterator.hasNext()) {
+                    Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
+                            (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
+                    String current_mac = entry.getValue().getDeviceMac();
+                    if (device_mac.equalsIgnoreCase(current_mac) ) {
                         Bundle device_info = new Bundle();
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
                         device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
@@ -471,10 +487,10 @@ public class BleManagerService extends Service {
                         byte[] content_bytes = null;
                         entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
                         device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
-                        le_device_list[le_devices_index] = device_info;
-                        le_devices_index = le_devices_index + 1;
+                        Bundle[] result_device_list = new Bundle[1];
+                        result_device_list[0] = device_info;
+                        return result_device_list;
                     }
-                    return le_device_list;
                 }
                 return null;
             }
@@ -483,12 +499,14 @@ public class BleManagerService extends Service {
 
         @Override
         public Bundle[] getDeviceInfoByName(String device_name){
-            BleLogUtils.outputServiceLog("getDeviceInfoByName::name= " + device_name + " size= " +
-                    ((null == mCurrentDeviceMap || mCurrentDeviceMap.size() <= 0) ? "-1" : mCurrentDeviceMap.size()));
+            int device_size = (null == mCurrentDeviceMap || mCurrentDeviceMap.size() == 0) ?
+                    -1 : mCurrentDeviceMap.size();
+            BleLogUtils.outputServiceLog("BleOpImpl::getDeviceInfoByName::name= " + device_name + " device_size= " + device_size);
+
             ArrayList<Bundle> device_list = new ArrayList();
-            if (null != mCurrentDeviceMap && mCurrentDeviceMap.size() > 0) {
+            if (device_size > 0) {
                 Iterator device_iterator = mCurrentDeviceMap.entrySet().iterator();
-                if (TextUtils.isEmpty(device_name)){
+                if (!TextUtils.isEmpty(device_name)){
                     while (device_iterator.hasNext()) {
                         Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
                                 (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
@@ -501,23 +519,6 @@ public class BleManagerService extends Service {
                         entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
                         device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
                         device_list.add(device_info);
-                    }
-                } else {
-                    while (device_iterator.hasNext()) {
-                        Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage> entry =
-                                (Map.Entry<String, ConnectBleDevice.BleBroadcastRecordMessage>) device_iterator.next();
-                        String current_name = entry.getValue().getDeviceName();
-                        if (device_name.equalsIgnoreCase(current_name)){
-                            Bundle device_info = new Bundle();
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME, entry.getValue().getDeviceName());
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS, entry.getValue().getDeviceMac());
-                            device_info.putString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS, entry.getValue().getDeviceClass());
-                            device_info.putLong(BleLibsConfig.BROADCAST_INFO_SIGNAL, entry.getValue().getDeviceRssi());
-                            byte[] content_bytes = null;
-                            entry.getValue().getBroadcastContent().copyTo(content_bytes, 0);
-                            device_info.putByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT, content_bytes);
-                            device_list.add(device_info);
-                        }
                     }
                 }
             }
@@ -555,17 +556,17 @@ public class BleManagerService extends Service {
         }
 
         @Override
-        public Bundle[] getCharacteristic(String service_uuid) throws RemoteException {
-            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::params= " + service_uuid);
+        public Bundle[] getCharacteristic(String input_ch_uuid) throws RemoteException {
+            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::params= " + input_ch_uuid);
             Bundle[] all_ch_bundle = null;
-            if (!TextUtils.isEmpty(service_uuid) && null != mAllServices && mAllServices.size() > 0){
+            if (!TextUtils.isEmpty(input_ch_uuid) && null != mAllServices && mAllServices.size() > 0){
                 for (BluetoothGattService current_service : mAllServices) {
                     String current_service_uuid = current_service.getUuid().toString();
                     List<BluetoothGattCharacteristic> current_ch_list = current_service.getCharacteristics();
                     BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::Service= " + current_service_uuid +
                                                 " found ch total= " + ((null != current_ch_list && current_ch_list.size() > 0) ?
                                                                         String.valueOf(current_ch_list.size()) : "-1"));
-                    if (service_uuid.equalsIgnoreCase(current_service_uuid) &&
+                    if (input_ch_uuid.equalsIgnoreCase(current_service_uuid) &&
                             null != current_ch_list && current_ch_list.size() > 0) {
                         all_ch_bundle = new Bundle[current_ch_list.size()];
                         for (int ch_index = 0; ch_index < current_ch_list.size(); ch_index++) {
@@ -587,43 +588,10 @@ public class BleManagerService extends Service {
                     break;
                 }
             }
-            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::service= " + service_uuid +
+            BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::service= " + input_ch_uuid +
                     " found ch total= " + ((null != all_ch_bundle && all_ch_bundle.length > 0) ?
                     String.valueOf(all_ch_bundle.length) : "-1"));
             return all_ch_bundle;
-        }
-
-        @Override
-        public boolean isSupportLE(){
-            boolean is_support = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-            BleLogUtils.outputServiceLog("isSupportLE::result= " + is_support);
-            return is_support;
-        }
-
-        @Override
-        public boolean leIsEnable() throws RemoteException {
-            boolean is_enable = false;
-            if (null != mBleAdapter) {
-                is_enable = mBleAdapter.isEnabled();
-            }
-            BleLogUtils.outputServiceLog("BleOpImpl::leIsEnable::result= " + is_enable);
-            return is_enable;
-        }
-
-        @Override
-        public boolean bleSwitcher(boolean enabled) throws RemoteException {
-            boolean is_success = false;
-
-            if (null != mBleAdapter) {
-                stopDiscoveryDevice();
-                if (enabled)
-                    is_success = mBleAdapter.enable();
-                else {
-                    is_success = mBleAdapter.disable();
-                }
-            }
-            BleLogUtils.outputServiceLog("BleOpImpl::bleSwitcher::enabled= " + enabled + " result= " + is_success);
-            return is_success;
         }
 
         @Override
@@ -632,7 +600,6 @@ public class BleManagerService extends Service {
             mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
             mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
             mSourceDeviceMAC = BleLibsConfig.getDeviceMacInFile(BleManagerService.this);
-
 
             boolean is_success = false;
             if (null != mBleAdapter) {
@@ -644,7 +611,9 @@ public class BleManagerService extends Service {
                 is_success = mBleAdapter.startLeScan(mLeScanCallback);
             }
 
-            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::result= " + is_success + " auto= " + mAutoConnect + " ot= " + mScanOvertime);
+            BleLogUtils.outputServiceLog("BleOpImpl::startDiscoveryDevice::a_c= "
+                    + mAutoConnect + " s_o= " + mScanOvertime + " s_mac= " + mSourceDeviceMAC + " op_result= "
+                    + is_success + " mIsScanning= " + mIsScanning);
             if (is_success){
                 if (null != mBleOpCallback) {
                     mBleOpCallback.onDeviceScan(BleLibsConfig.LE_SCAN_PROCESS_BEGIN, null, null,
