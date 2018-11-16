@@ -2,30 +2,38 @@ package com.icen.icenlibs;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.icen.blelibrary.BleManager;
 import com.icen.blelibrary.activity.BleBaseActivity;
 import com.icen.blelibrary.config.BleLibsConfig;
+import com.icen.blelibrary.ui.BleConfigActivity;
 
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class BleDemoActivity extends BleBaseActivity
         implements CompoundButton.OnCheckedChangeListener,
-        View.OnClickListener{
+        View.OnClickListener {
 
     private View mRootView;
     private Switch mSHLESwitch;
     private Button mBtnScan, mBtnConnect, mBtnShowDeviceList;
 
-    private HashMap<String, Bundle> mDeviceListByName;
-    private HashMap<String, Bundle> mDeviceListByAddress;
+    private LinearLayout mLLDeviceInfo;
+    private TextView mTVDeviceName, mTVDeviceMac, mTVDeviceClass, mTVDeviceRSSI, mTVDeviceContent;
 
+    private String mCurrentDeviceName, mCurrentDeviceMac, mCurrentDeviceClass;
+    private String mCurrentDeviceRSSI, mCurrentDeviceContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +44,54 @@ public class BleDemoActivity extends BleBaseActivity
         mBtnConnect.setOnClickListener(this);
         mBtnScan = ((Button) findViewById(R.id.ble_demo_le_scan_button));
         mBtnScan.setOnClickListener(this);
-        mBtnShowDeviceList = (Button) findViewById(R.id.ble_demo_le_showlist_button);
+        mBtnShowDeviceList = (Button) findViewById(R.id.ble_demo_le_show_list_button);
         mBtnShowDeviceList.setOnClickListener(this);
         mSHLESwitch = (Switch) findViewById(R.id.ble_demo_le_switch);
+
+        mLLDeviceInfo = (LinearLayout) findViewById(R.id.ble_demo_le_select);
+        mLLDeviceInfo.setVisibility(View.GONE);
+        mTVDeviceName = (TextView) findViewById(R.id.ble_demo_le_select_name);
+        mTVDeviceMac  = (TextView) findViewById(R.id.ble_demo_le_select_mac);
+        mTVDeviceClass = (TextView) findViewById(R.id.ble_demo_le_select_class);
+        mTVDeviceRSSI = (TextView) findViewById(R.id.ble_demo_le_select_rssi);
+        mTVDeviceContent  = (TextView) findViewById(R.id.ble_demo_le_select_content);
+
         mRootView.setEnabled(false);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        AppLogUtils.outputActivityLog("BleDemoActivity::onActivityResult::requestCode= " + requestCode +
+                " resultCode= " + resultCode + " data= " + data);
+        if (requestCode == DeviceListActivity.REQUEST_CODE &&
+                resultCode == RESULT_OK){
+            mLLDeviceInfo.setVisibility(View.VISIBLE);
+            mBtnConnect.setEnabled(true);
+            Bundle select_device = getIntent().getBundleExtra(DeviceListActivity.KEY_RESULT_BUNDLE);
+            mCurrentDeviceName = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
+            mCurrentDeviceMac = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS);
+            mCurrentDeviceClass = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS);
+            mCurrentDeviceRSSI = String.valueOf(select_device.getLong(BleLibsConfig.BROADCAST_INFO_SIGNAL));
+            byte[] broadcast_record = select_device.getByteArray(BleLibsConfig.BROADCAST_INFO_DEVICE_CONTENT);
+            mCurrentDeviceContent = (null != broadcast_record && broadcast_record.length <= 0) ?
+                    "NONE" : Arrays.toString(broadcast_record);
+
+            mTVDeviceName.setText(mCurrentDeviceName);
+            mTVDeviceMac.setText(mCurrentDeviceMac);
+            mTVDeviceClass.setText(mCurrentDeviceClass);
+            mTVDeviceRSSI.setText(mCurrentDeviceRSSI);
+            mTVDeviceContent.setText(mCurrentDeviceContent);
+        } else {
+            mLLDeviceInfo.setVisibility(View.GONE);
+            mBtnConnect.setEnabled(false);
+            mCurrentDeviceName = "";
+            mCurrentDeviceMac = "";
+            mCurrentDeviceClass = "";
+            mCurrentDeviceRSSI = "";
+            mCurrentDeviceContent = "";
+        }
+    }
 
     /**
      * Called when the checked state of a compound button has changed.
@@ -67,18 +117,15 @@ public class BleDemoActivity extends BleBaseActivity
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.ble_demo_le_connect_button:
+                if (!TextUtils.isEmpty(mCurrentDeviceMac)){
+                    mBleManager.connectToDevice(true, mCurrentDeviceMac);
+                }
                 break;
             case R.id.ble_demo_le_scan_button:
                 mBleManager.startScanDevice();
                 break;
-            case R.id.ble_demo_le_showlist_button:
-                Intent show_list_intent = new Intent("com.icen.icenlibs.BLE_DEVICE_LIST_DEMO");
-                show_list_intent.addCategory(Intent.CATEGORY_DEFAULT);
-                try {
-                    startActivity(show_list_intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            case R.id.ble_demo_le_show_list_button:
+                DeviceListActivity.startMySelfWithResult(this);
                 break;
         }
     }
@@ -94,14 +141,12 @@ public class BleDemoActivity extends BleBaseActivity
             mBleManager.setManagerCallback(this);
             if (mBleManager.isLeEnabled()) {
                 mBtnScan.setEnabled(true);
-                mBtnConnect.setEnabled(true);
             } else {
                 mBtnScan.setEnabled(false);
-                mBtnConnect.setEnabled(false);
             }
 
             if (!mBleManager.isSupportLE()){
-                Toast.makeText(this, "not support le", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Current device not support le", Toast.LENGTH_LONG).show();
                 finish();
             }
         } else {
@@ -124,11 +169,9 @@ public class BleDemoActivity extends BleBaseActivity
             mSHLESwitch.setEnabled(false);
         } else if (BleLibsConfig.BLE_SWITCH_ON == current_state) {
             mBtnScan.setEnabled(true);
-            mBtnConnect.setEnabled(true);
             mSHLESwitch.setEnabled(true);
         } else if (BleLibsConfig.BLE_SWITCH_OFF == current_state) {
             mBtnScan.setEnabled(false);
-            mBtnConnect.setEnabled(false);
             mSHLESwitch.setEnabled(true);
         } else if (BleLibsConfig.BLE_SWITCH_ERROR == current_state){
             mSHLESwitch.setOnCheckedChangeListener(null);
@@ -136,40 +179,41 @@ public class BleDemoActivity extends BleBaseActivity
             mSHLESwitch.setOnCheckedChangeListener(this);
             if (mBleManager.isLeEnabled()){
                 mBtnScan.setEnabled(true);
-                mBtnConnect.setEnabled(true);
             } else {
                 mBtnScan.setEnabled(false);
-                mBtnConnect.setEnabled(false);
             }
         }
     }
 
     @Override
-    public void onLEScan(int scan_process, String device_name, String device_class, String device_mac, int device_rssi, byte[] broadcast_content) {
-        AppLogUtils.outputActivityLog("BleDemoActivity::onLEScan::process= " + scan_process + " name= " + device_name +
-                                " class= " + device_class + " mac= " + device_mac + " content= " + Arrays.toString(broadcast_content));
-        if (BleLibsConfig.LE_SCAN_PROCESS_BEGIN == scan_process){
+    public void onLEScan(int scan_process, String device_name, String device_class, String device_mac,
+                         int device_rssi, byte[] broadcast_content) {
+        AppLogUtils.outputActivityLog("BleDemoActivity::onLEScan::process= " + scan_process +
+                " name= " + device_name + " mac= " + device_mac +
+                " class= " + device_class +  " RSSI= " + device_rssi +
+                " content= " + Arrays.toString(broadcast_content));
+
+        if (BleLibsConfig.LE_SCAN_PROCESS_BEGIN == scan_process){//指示扫描开始
             Toast.makeText(this, "LE Scan begin", Toast.LENGTH_LONG).show();
-            mDeviceListByName = null;
-            mDeviceListByName = new HashMap<>();
-
-            mDeviceListByAddress = null;
-            mDeviceListByAddress = new HashMap<>();
-
-        } else if (BleLibsConfig.LE_SCAN_PROCESS_DOING == scan_process) {
+            mBtnShowDeviceList.setEnabled(false);
+        } else if (BleLibsConfig.LE_SCAN_PROCESS_DOING == scan_process) {//扫描进行中
             //do nothing
-        } else {
+        } else if (BleLibsConfig.LE_SCAN_PROCESS_END == scan_process){//扫描结束
             Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
-            Bundle[] device_list = mBleManager.getAllDevices();
-            if (null != device_list && device_list.length > 0) {
-                for (int index = 0; index < device_list.length; index ++) {
-                    Bundle current_device = device_list[index];
-                    String device_name_b = current_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
-                    String device_address_b = current_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS);
-                    mDeviceListByAddress.put(device_address_b, device_list[index]);
-                    mDeviceListByName.put(device_name_b, device_list[index]);
-                }
-            }
+            mBtnShowDeviceList.setEnabled(true);
+        } else {//扫描发生异常
+            Toast.makeText(this, "Scan exception. finish this process", Toast.LENGTH_LONG).show();
+            mBtnShowDeviceList.setEnabled(false);
+        }
+    }
+
+    @Override
+    public void onConnectDevice(boolean is_success, String device_name, String device_mac) {
+        super.onConnectDevice(is_success, device_name, device_mac);
+        AppLogUtils.outputActivityLog("BleDemoActivity::onLEScan::is_success= " + is_success +
+            " device_name= " + device_name + " device_mac= " + device_mac);
+        if (is_success){
+
         }
     }
 }

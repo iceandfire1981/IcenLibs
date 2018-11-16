@@ -1,5 +1,8 @@
 package com.icen.icenlibs;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +18,35 @@ import java.util.HashMap;
 
 public class DeviceListActivity extends AppCompatActivity implements
         AdapterView.OnItemClickListener, BleManagerCallBack{
+
+    public static final int REQUEST_CODE = 9000;
+    public static final String KEY_RESULT_BUNDLE = "my_bundle";
+    private static final String INTENT_STRING = "com.icen.icenlibs.BLE_DEVICE_LIST_DEMO";
+    public static final boolean startMySelfWithResult(Activity ctx){
+        Intent start_intent = new Intent(INTENT_STRING);
+        start_intent.addCategory(Intent.CATEGORY_DEFAULT);
+        boolean is_success = false;
+        try {
+            ctx.startActivityForResult(start_intent, REQUEST_CODE);
+            is_success = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return is_success;
+    }
+
+    public static final boolean startMySelf(Activity ctx){
+        Intent start_intent = new Intent(INTENT_STRING);
+        start_intent.addCategory(Intent.CATEGORY_DEFAULT);
+        boolean is_success = false;
+        try {
+            ctx.startActivity(start_intent);
+            is_success = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return is_success;
+    }
 
     private ListView mLVDeviceList;
 
@@ -35,9 +67,7 @@ public class DeviceListActivity extends AppCompatActivity implements
     @Override
     public void onBackPressed() {
         AppLogUtils.outputActivityLog("DeviceListActivity::onBackPressed==============");
-        if (null != mBleManager && mBleManager.isReady()){
-            mBleManager.destroyManager();
-        }
+        setResult(RESULT_CANCELED);
         super.onBackPressed();
     }
 
@@ -56,8 +86,13 @@ public class DeviceListActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
+    public void onItemClick(AdapterView<?> adapterView, View view, int selected_index, long l) {
+        AppLogUtils.outputActivityLog("DeviceListActivity::index= " + selected_index);
+        Bundle select_device = (Bundle) mDeviceListAdapter.getItem(selected_index);
+        Intent result_intent = getIntent();
+        result_intent.putExtra(KEY_RESULT_BUNDLE, select_device);
+        setResult(RESULT_OK, result_intent);
+        finish();
     }
 
     @Override

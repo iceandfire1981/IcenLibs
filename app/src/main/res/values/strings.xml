@@ -8,6 +8,7 @@
     <string name="ble_demo_switcher">蓝牙开关</string>
     <string name="ble_demo_show_list">显示设备列表</string>
 
+
     <string name="ble_common_le_not_enable">蓝牙未开启</string>
     <string name="ble_common_no_connect_device">未连接</string>
     <string name="ble_common_no_info">NA</string>

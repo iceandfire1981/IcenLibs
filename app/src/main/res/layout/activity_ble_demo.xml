@@ -47,8 +47,58 @@
         android:enabled="false"/>
 
     <Button
-        android:id="@+id/ble_demo_le_showlist_button"
+        android:id="@+id/ble_demo_le_show_list_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ble_demo_show_list"/>
+        android:text="@string/ble_demo_show_list"
+        android:enabled="false"/>
+
+    <LinearLayout
+        android:id="@+id/ble_demo_le_select"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@android:drawable/btn_default"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/ble_demo_le_select_name"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|left"
+            android:text="111111111111111111"/>
+        <TextView
+            android:id="@+id/ble_demo_le_select_mac"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|left"
+            android:text="111111111111111111"/>
+        <TextView
+            android:id="@+id/ble_demo_le_select_class"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|left"
+            android:text="111111111111111111"/>
+        <TextView
+            android:id="@+id/ble_demo_le_select_rssi"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|left"
+            android:text="111111111111111111"/>
+        <TextView
+            android:id="@+id/ble_demo_le_select_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|left"
+            android:text="111111111111111111"/>
+    </LinearLayout>
 </LinearLayout>
