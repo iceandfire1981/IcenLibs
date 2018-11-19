@@ -545,9 +545,12 @@ public class BleManagerService extends Service {
                     Bundle service_bundle = new Bundle();
                     String service_uuid = mAllServices.get(service_index).getUuid().toString();
                     String service_name = BleCommonUtils.lookupService(service_uuid);
-                    BleLogUtils.outputServiceLog("BleOpImpl::getServices::process::uuid= " + service_uuid + " name= " + service_name);
-                    service_bundle.putString(BleLibsConfig.LE_SERVICE_UUID, service_uuid);
+                    String service_type = BleCommonUtils.getServiceType(mAllServices.get(service_index).getType());
+                    BleLogUtils.outputServiceLog("BleOpImpl::getServices::process::uuid= " + service_uuid +
+                            " name= " + service_name + " type= " + service_type);
                     service_bundle.putString(BleLibsConfig.LE_SERVICE_NAME, service_name);
+                    service_bundle.putString(BleLibsConfig.LE_SERVICE_UUID, service_uuid);
+                    service_bundle.putString(BleLibsConfig.LE_SERVICE_TYPE, service_type);
                     all_services_bundle[service_index] = service_bundle;
                 }
                 BleLogUtils.outputServiceLog("BleOpImpl::getServices::info::total= " + all_services_bundle.length);

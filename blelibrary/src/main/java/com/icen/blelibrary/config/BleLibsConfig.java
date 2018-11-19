@@ -54,8 +54,9 @@ public final class BleLibsConfig {
     public static final int     LE_RW_GET_DATA = LE_RW_GET_RESULT + 1;
 
     //BLE服务(SERVICE)配置
-    public static final String   LE_SERVICE_UUID = "le_service_uuid";
     public static final String   LE_SERVICE_NAME = "le_service_name";
+    public static final String   LE_SERVICE_UUID = "le_service_uuid";
+    public static final String   LE_SERVICE_TYPE = "le_service_type";
 
     //BLE特征（Characteristic）配置
     public static final String   LE_CHARACTERISTIC_UUID = "le_characteristic_uuid";

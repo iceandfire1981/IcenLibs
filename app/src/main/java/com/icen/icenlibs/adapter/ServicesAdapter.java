@@ -47,12 +47,14 @@ public class ServicesAdapter extends BaseAdapter {
         if (null == contentView) {
             contentView = LayoutInflater.from(mContext).inflate(R.layout.service_item_layout, null);
         }
-        TextView tv_service_name = (TextView) contentView.findViewById(R.id.s_i_name);
-        TextView tv_service_uuid = (TextView) contentView.findViewById(R.id.s_i_uuid);
 
         Bundle service_info = mServicesList.get(i);
+        TextView tv_service_name = (TextView) contentView.findViewById(R.id.s_i_name);
         tv_service_name.setText(service_info.getString(BleLibsConfig.LE_SERVICE_NAME));
+        TextView tv_service_uuid = (TextView) contentView.findViewById(R.id.s_i_uuid);
         tv_service_uuid.setText(service_info.getString(BleLibsConfig.LE_SERVICE_UUID));
+        TextView tv_service_type = (TextView) contentView.findViewById(R.id.s_i_type);
+        tv_service_type.setText(service_info.getString(BleLibsConfig.LE_SERVICE_TYPE));
         return contentView;
     }
 }
