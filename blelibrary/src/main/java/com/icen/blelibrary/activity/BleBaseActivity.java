@@ -62,7 +62,7 @@ public class BleBaseActivity extends AppCompatActivity
 
     @Override
     public void finish() {
-        reInitialManager();
+        destroyBleManager();
         super.finish();
     }
 

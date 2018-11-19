@@ -1,4 +1,4 @@
-package com.icen.icenlibs.devices;
+package com.icen.icenlibs.adapter;
 
 import android.content.Context;
 import android.os.Bundle;

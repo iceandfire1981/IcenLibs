@@ -117,8 +117,11 @@ public class BleDemoActivity extends BleBaseActivity
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.ble_demo_le_connect_button:
-                if (!TextUtils.isEmpty(mCurrentDeviceMac)){
-                    mBleManager.connectToDevice(true, mCurrentDeviceMac);
+                if (!TextUtils.isEmpty(mCurrentDeviceName) && !TextUtils.isEmpty(mCurrentDeviceMac)) {
+                    boolean is_success = BleInformationActivity.startMySelf(this, mCurrentDeviceMac, mCurrentDeviceName);
+                    if (!is_success) {
+                        Toast.makeText(this, "To info activity false", Toast.LENGTH_LONG).show();
+                    }
                 }
                 break;
             case R.id.ble_demo_le_scan_button:

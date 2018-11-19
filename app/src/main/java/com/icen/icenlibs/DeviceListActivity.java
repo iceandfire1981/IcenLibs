@@ -1,7 +1,6 @@
 package com.icen.icenlibs;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,7 +11,7 @@ import android.widget.ListView;
 import com.icen.blelibrary.BleManager;
 import com.icen.blelibrary.BleManagerCallBack;
 import com.icen.blelibrary.config.BleLibsConfig;
-import com.icen.icenlibs.devices.DeviceListAdapter;
+import com.icen.icenlibs.adapter.DeviceListAdapter;
 
 import java.util.HashMap;
 

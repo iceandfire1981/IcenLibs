@@ -5,33 +5,166 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".BleInformationActivity">
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/b_i_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/holo_blue_bright">
-        <TextView
-            android:id="@+id/b_i_title_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:text="@string/ble_common_no_connect_device"
-            android:textSize="20dp"
-            android:gravity="center"/>
 
         <TextView
             android:id="@+id/b_i_title_address"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:text="@string/ble_common_no_info"
             android:textSize="20dp"
             android:gravity="center"/>
+        <TextView
+            android:id="@+id/b_i_title_name"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:text="@string/ble_common_no_connect_device"
+            android:textSize="20dp"
+            android:gravity="center"/>
+    </LinearLayout>
 
-    </RelativeLayout>
-    <ListView
-        android:id="@+id/b_i_services_list"
+    <LinearLayout
+        android:id="@+id/b_i_rw_root"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@android:drawable/btn_default">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_service"
+                android:textSize="25dp"
+                android:gravity="center_vertical"/>
+            <Spinner
+                android:id="@+id/b_i_rw_service"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_characteristic"
+                android:textSize="25dp"
+                android:gravity="center_vertical"/>
+            <Spinner
+                android:id="@+id/b_i_rw_characteristic"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/b_i_rw_content"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="match_parent" />
+            <Button
+                android:id="@+id/b_i_rw_read"
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_read"/>
+            <Button
+                android:id="@+id/b_i_rw_write"
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_write"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/b_i_rw_result"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:text="@string/ble_common_function"
+            android:textSize="20dp"
+            android:gravity="center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/b_i_n_root"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@android:drawable/btn_default">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_service"
+                android:textSize="25dp"
+                android:gravity="center_vertical"/>
+            <Spinner
+                android:id="@+id/b_i_n_service"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.25"
+                android:layout_height="match_parent"
+                android:text="@string/ble_common_characteristic"
+                android:textSize="25dp"
+                android:gravity="center_vertical"/>
+            <Spinner
+                android:id="@+id/b_i_n_characteristic"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/b_i_n_result"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:text="@string/ble_common_function"
+            android:textSize="20dp"
+            android:gravity="center_vertical"/>
+
+    </LinearLayout>
+
 </LinearLayout>

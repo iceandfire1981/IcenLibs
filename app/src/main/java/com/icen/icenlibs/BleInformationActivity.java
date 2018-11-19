@@ -1,31 +1,65 @@
 package com.icen.icenlibs;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.icen.blelibrary.BleManager;
-import com.icen.blelibrary.BleManagerCallBack;
-import com.icen.icenlibs.devices.ServicesAdapter;
+import com.icen.blelibrary.activity.BleBaseActivity;
+import com.icen.icenlibs.adapter.ServicesAdapter;
 
-import org.w3c.dom.Text;
+public class BleInformationActivity extends BleBaseActivity
+                                    implements AdapterView.OnItemClickListener, View.OnClickListener {
 
-public class BleInformationActivity extends AppCompatActivity
-                                    implements AdapterView.OnItemClickListener,
-                                                BleManagerCallBack{
-
+    public static final int REQUEST_CODE = 9001;
     public static final String KEY_TARGET_ADDRESS = "key_target_address";
     public static final String KEY_TARGET_NAME = "key_target_name";
+    private static final String INTENT_STRING = "com.icen.icenlibs.BLE_INFO_DEMO";
+
+    public static final boolean startMySelfWithResult(Activity ctx, String target_address, String target_name){
+        Intent start_intent = new Intent(INTENT_STRING);
+        start_intent.addCategory(Intent.CATEGORY_DEFAULT);
+        start_intent.putExtra(KEY_TARGET_NAME, target_name);
+        start_intent.putExtra(KEY_TARGET_ADDRESS, target_address);
+        boolean is_success = false;
+        try {
+            ctx.startActivityForResult(start_intent, REQUEST_CODE);
+            is_success = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return is_success;
+    }
+
+    public static final boolean startMySelf(Activity ctx, String target_address, String target_name){
+        Intent start_intent = new Intent(INTENT_STRING);
+        start_intent.addCategory(Intent.CATEGORY_DEFAULT);
+        start_intent.putExtra(KEY_TARGET_NAME, target_name);
+        start_intent.putExtra(KEY_TARGET_ADDRESS, target_address);
+        boolean is_success = false;
+        try {
+            ctx.startActivity(start_intent);
+            is_success = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return is_success;
+    }
 
     private TextView mTVDeviceName, mTVDeviceMac;
-    private ListView mLVServiceList;
+    private View mVOperationRoot, mVNotificationRoot;
+    private EditText mETContent;
+    private TextView mTVRWResult, mTVNotificationResult;
+    private Button   mBTRead, mBTWrite;
+    private Spinner  mSPService, mSPCh, mSPService1, mSPCh1;
 
-    private BleManager mBleManager;
     private ServicesAdapter mServiceAdapter;
 
     private String mTargetName, mTargetAddress;
@@ -39,36 +73,26 @@ public class BleInformationActivity extends AppCompatActivity
         mTargetAddress = getIntent().getStringExtra(KEY_TARGET_ADDRESS);
 
         if (TextUtils.isEmpty(mTargetAddress)) {
+            Toast.makeText(this, "Invalid address or name!", Toast.LENGTH_LONG).show();
             finish();
         }
 
         mTVDeviceName = (TextView) findViewById(R.id.b_i_title_name);
         mTVDeviceName.setText(mTargetName);
         mTVDeviceMac = (TextView) findViewById(R.id.b_i_title_address);
-        mLVServiceList = (ListView) findViewById(R.id.b_i_services_list);
-        mLVServiceList.setOnItemClickListener(this);
+        mTVDeviceMac.setText(mTargetAddress);
 
-        mBleManager = new BleManager(this);
-        mBleManager.startManager();
-    }
+        mVOperationRoot = findViewById(R.id.b_i_rw_root);
+        mVOperationRoot.setEnabled(false);
+        mVNotificationRoot = findViewById(R.id.b_i_n_root);
+        mVNotificationRoot.setEnabled(false);
 
-    @Override
-    public void onBackPressed() {
-        AppLogUtils.outputActivityLog("BleInformationActivity::onBackPressed::System Ready= "
-                + (null != mBleManager && mBleManager.isReady()));
-        if (null != mBleManager && mBleManager.isReady()) {
-            mBleManager.destroyManager();
-        }
-        super.onBackPressed();
-    }
+        mSPService  = (Spinner) findViewById(R.id.b_i_rw_service);
+        mSPCh       = (Spinner) findViewById(R.id.b_i_rw_characteristic);
 
-    @Override
-    public void finish() {
-        AppLogUtils.outputActivityLog("BleInformationActivity::onBackPressed::System Ready= "
-                + (null != mBleManager && mBleManager.isReady()));
-        if (null != mBleManager && mBleManager.isReady())
-            mBleManager.destroyManager();
-        super.finish();
+        mSPService1 = (Spinner) findViewById(R.id.b_i_n_service);
+        mSPCh       = (Spinner) findViewById(R.id.b_i_n_characteristic);
+
     }
 
     @Override
@@ -92,16 +116,6 @@ public class BleInformationActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLESwitch(int current_state) {
-        //Do nothing here
-    }
-
-    @Override
-    public void onLEScan(int scan_process, String device_name, String device_class, String device_mac, int device_rssi, byte[] broadcast_content) {
-        //Do nothing here
-    }
-
-    @Override
     public void onConnectDevice(boolean is_success, String device_name, String device_mac) {
         AppLogUtils.outputActivityLog("BleInformationActivity::onBackPressed::is_success= " + is_success +
                                     " device_name = " + device_name + " device_mac= " + device_mac );
@@ -112,7 +126,6 @@ public class BleInformationActivity extends AppCompatActivity
                 Toast.makeText(this, success_result, Toast.LENGTH_LONG).show();
                 mTVDeviceMac.setText(mTargetAddress);
                 mServiceAdapter = new ServicesAdapter(this, service_list);
-                mLVServiceList.setAdapter(mServiceAdapter);
             } else {
                 String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
                 Toast.makeText(this, false_result, Toast.LENGTH_LONG).show();
@@ -137,6 +150,11 @@ public class BleInformationActivity extends AppCompatActivity
 
     @Override
     public void onWriteCh(int write_step, boolean is_success, String write_uuid, byte[] respond_data) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
 
     }
 }
