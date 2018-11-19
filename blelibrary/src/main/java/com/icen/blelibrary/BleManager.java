@@ -557,7 +557,11 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
 
     @Override
     public void onCharacteristicChange(boolean is_success, String ch_uuid, byte[] ble_value) throws RemoteException {
-
+        BleLogUtils.outputManagerLog("onCharacteristicChange::success= " + is_success + " uuid= " + ch_uuid +
+                " value= " + Arrays.toString(ble_value));
+        if (null != mClientCallback) {
+            mClientCallback.onChChange(is_success, ch_uuid, ble_value);
+        }
     }
 
     @Override

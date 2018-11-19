@@ -12,15 +12,13 @@ import android.widget.TextView;
 import com.icen.blelibrary.config.BleLibsConfig;
 import com.icen.icenlibs.R;
 
-import java.util.ArrayList;
-
 public class CharacteristicAdapter extends BaseAdapter {
 
     private Context mContext;
     private LayoutInflater mLi;
-    private ArrayList<Bundle> mAllChs;
+    private Bundle[] mAllChs;
 
-    public CharacteristicAdapter(Context ctx, @NonNull ArrayList<Bundle> all_ch)  {
+    public CharacteristicAdapter(Context ctx, @NonNull Bundle[] all_ch)  {
         mContext = ctx;
         mAllChs = all_ch;
         mLi = LayoutInflater.from(mContext);
@@ -28,12 +26,12 @@ public class CharacteristicAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return (null == mAllChs || mAllChs.size() <= 0) ? 0 : mAllChs.size();
+        return (null == mAllChs || mAllChs.length <= 0) ? 0 : mAllChs.length;
     }
 
     @Override
     public Object getItem(int position) {
-        return mAllChs.get(position);
+        return mAllChs[position];
     }
 
     @Override
@@ -51,7 +49,7 @@ public class CharacteristicAdapter extends BaseAdapter {
         TextView tv_property = convertView.findViewById(R.id.c_i_property);
         TextView tv_permission = convertView.findViewById(R.id.c_i_permission);
 
-        Bundle current_bundle = mAllChs.get(position);
+        Bundle current_bundle = mAllChs[position];
         tv_name.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_NAME));
         tv_uuid.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_UUID));
         tv_property.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_PROPERTIES));

@@ -124,6 +124,12 @@ public class BleBaseActivity extends AppCompatActivity
                 " uuid= " + write_uuid + " data= " + Arrays.toString(respond_data));
     }
 
+    @Override
+    public void onChChange(boolean is_success, String ch_uuid, byte[] ble_value) {
+        BleLogUtils.outputActivityLog("BleBaseActivity::onChChange::result= " + is_success +
+                " uuid= " + ch_uuid + " data= " + Arrays.toString(ble_value));
+    }
+
     /**
      * 启动管理器
      */
