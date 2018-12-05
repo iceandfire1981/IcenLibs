@@ -150,4 +150,9 @@ public class DeviceListActivity extends AppCompatActivity implements
     public void onWriteCh(int write_step, boolean is_success, String write_uuid, byte[] respond_data) {
 
     }
+
+    @Override
+    public void onChChange(boolean is_success, String ch_uuid, byte[] ble_value) {
+
+    }
 }
