@@ -32,4 +32,11 @@ public final class BleLogUtils {
         if (ENABLE_ACTIVITY_LOG)
             android.util.Log.e(TAG_ACTIVITY_LOG, output_message);
     }
+
+    private static final boolean ENABLE_APPLICATION_LOG = true;
+    private static final String  TAG_APPLICATION_LOG = "base_application";
+    public static final void  outputApplicationLog(String output_message){
+        if (ENABLE_APPLICATION_LOG)
+            android.util.Log.e(TAG_APPLICATION_LOG, output_message);
+    }
 }

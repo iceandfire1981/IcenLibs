@@ -5,17 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.icen.blelibrary.services.BleManagerService;
 import com.icen.blelibrary.utils.BleLogUtils;
-
-import java.net.PortUnreachableException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
 
 /**
  * BLE库的配置, 包括：

@@ -3,6 +3,7 @@ package com.icen.blelibrary;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,11 +29,11 @@ import java.util.HashMap;
  */
 public final class BleManager extends IBleOpCallback.Stub implements ServiceConnection{
 
-    private Activity mContext;
+    private Context mContext;
     private IBleOp mBleOp;
     private BleManagerCallBack mClientCallback;
 
-    public BleManager(Activity ctx){
+    public BleManager(Context ctx){
         mContext = ctx;
         mClientCallback = null;
         mBleOp = null;
