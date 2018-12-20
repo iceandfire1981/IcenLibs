@@ -68,7 +68,7 @@ public class BleDemoActivity extends BleBaseActivity
                 resultCode == RESULT_OK){
             mLLDeviceInfo.setVisibility(View.VISIBLE);
             mBtnConnect.setEnabled(true);
-            Bundle select_device = getIntent().getBundleExtra(DeviceListActivity.KEY_RESULT_BUNDLE);
+            Bundle select_device = data.getExtras();
             mCurrentDeviceName = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_NAME);
             mCurrentDeviceMac = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_ADDRESS);
             mCurrentDeviceClass = select_device.getString(BleLibsConfig.BROADCAST_INFO_DEVICE_CLASS);

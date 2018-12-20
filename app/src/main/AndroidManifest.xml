@@ -54,7 +54,12 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".BleInformationActivity"></activity>
+        <activity android:name=".BleInformationActivity">
+            <intent-filter>
+                <action android:name="com.icen.icenlibs.BLE_INFO_DEMO" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

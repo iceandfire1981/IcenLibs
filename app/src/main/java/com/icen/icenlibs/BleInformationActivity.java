@@ -64,6 +64,7 @@ public class BleInformationActivity extends BleBaseActivity
     private AdapterView.OnItemSelectedListener mRWServiceListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            AppLogUtils.outputActivityLog("BleInformationActivity::onItemSelected----1=====" + position);
             Bundle current_service = (Bundle) mRWServiceAdapter.getItem(position);
             String service_uuid = current_service.getString(BleLibsConfig.LE_SERVICE_UUID);
             mCurrentRWServiceUUID = service_uuid;
@@ -82,6 +83,7 @@ public class BleInformationActivity extends BleBaseActivity
     private AdapterView.OnItemSelectedListener mRWCharacteristicListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            AppLogUtils.outputActivityLog("BleInformationActivity::onItemSelected----2=====" + position);
             Bundle current_ch = (Bundle)mRWChAdapter.getItem(position);
             mCurrentRWChUUID = current_ch.getString(BleLibsConfig.LE_CHARACTERISTIC_UUID);
         }
@@ -95,6 +97,7 @@ public class BleInformationActivity extends BleBaseActivity
     private AdapterView.OnItemSelectedListener mNServiceListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            AppLogUtils.outputActivityLog("BleInformationActivity::onItemSelected----3=====" + position);
             Bundle current_service = (Bundle) mNotificationServiceAdapater.getItem(position);
             String service_uuid = current_service.getString(BleLibsConfig.LE_SERVICE_UUID);
             mCurrentNServiceUUID = service_uuid;
@@ -113,6 +116,7 @@ public class BleInformationActivity extends BleBaseActivity
     private AdapterView.OnItemSelectedListener mNCharacteristicListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            AppLogUtils.outputActivityLog("BleInformationActivity::onItemSelected----4=====" + position);
             Bundle current_ch = (Bundle)mNotificationChAdapater.getItem(position);
             mCurrentNChUUID = current_ch.getString(BleLibsConfig.LE_CHARACTERISTIC_UUID);
         }
@@ -168,9 +172,7 @@ public class BleInformationActivity extends BleBaseActivity
         mBTNSettings.setOnClickListener(this);
 
         mVOperationRoot = findViewById(R.id.b_i_rw_root);
-        mVOperationRoot.setEnabled(false);
         mVNotificationRoot = findViewById(R.id.b_i_n_root);
-        mVNotificationRoot.setEnabled(false);
 
         mSPRWService  = (Spinner) findViewById(R.id.b_i_rw_service);
         mSPRWService.setOnItemSelectedListener(mRWServiceListener);
@@ -199,28 +201,47 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     @Override
-    public void onConnectDevice(boolean is_success, String device_name, String device_mac) {
+    public void onConnectDevice(boolean is_success, final String device_name, final String device_mac) {
         AppLogUtils.outputActivityLog("BleInformationActivity::onBackPressed::is_success= " + is_success +
                                     " device_name = " + device_name + " device_mac= " + device_mac );
         if (is_success){
             mServicesList = null;
             mServicesList = mBleManager.getDeviceService();
             if (null != mServicesList && mServicesList.length > 0) {
-                String success_result = getResources().getString(R.string.ble_common_connect_success, device_name, device_mac);
-                Toast.makeText(this, success_result, Toast.LENGTH_LONG).show();
-                mVOperationRoot.setEnabled(true);
-                mVNotificationRoot.setEnabled(true);
-                updateRWServiceList();
-                updateNServiceList();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String success_result = getResources().getString(R.string.ble_common_connect_success, device_name, device_mac);
+                        Toast.makeText(BleInformationActivity.this, success_result, Toast.LENGTH_LONG).show();
+                        mTVDeviceMac.setText(device_mac);
+                        mTVDeviceName.setText(device_name);
+                        updateNServiceList();
+                        updateRWServiceList();
+
+                    }
+                });
+
             } else {
-                String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
-                Toast.makeText(this, false_result, Toast.LENGTH_LONG).show();
-                finish();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
+                        Toast.makeText(BleInformationActivity.this, false_result, Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+
             }
         } else {
-            String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
-            Toast.makeText(this, false_result, Toast.LENGTH_LONG).show();
-            finish();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
+                    Toast.makeText(BleInformationActivity.this, false_result, Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            });
+
         }
     }
 
@@ -283,32 +304,34 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     private void updateRWServiceList(){
+        AppLogUtils.outputActivityLog("BleInformationActivity::updateRWServiceList::=====");
         if (null != mServicesList && mServicesList.length > 0) {
-            mRWChAdapter = new CharacteristicAdapter(this, mServicesList);
-            mSPRWCh.setAdapter(mRWChAdapter);
-            mSPRWCh.setSelection(0);
+            mRWServiceAdapter = new ServicesAdapter(this, mServicesList);
+            mSPRWService.setAdapter(mRWServiceAdapter);
         }
     }
 
     private void updateRWChList(@NonNull  Bundle[] ch_list){
-        mRWServiceAdapter = new ServicesAdapter(this, mServicesList);
-        mSPRWService.setAdapter(mRWServiceAdapter);
-        mSPRWService.setSelection(0);
+        AppLogUtils.outputActivityLog("BleInformationActivity::updateRWChList::=====");
+        if (null != ch_list && ch_list.length > 0) {
+            mRWChAdapter = new CharacteristicAdapter(this, ch_list);
+            mSPRWCh.setAdapter(mRWChAdapter);
+        }
     }
 
     private void updateNServiceList(){
+        AppLogUtils.outputActivityLog("BleInformationActivity::updateNServiceList::=====");
         if (null != mServicesList && mServicesList.length > 0) {
             mNotificationServiceAdapater = new ServicesAdapter(this, mServicesList);
             mSPNService.setAdapter(mNotificationServiceAdapater);
-            mSPNService.setSelection(0);
         }
     }
 
     private void updateNChList(@NonNull  Bundle[] ch_list){
+        AppLogUtils.outputActivityLog("BleInformationActivity::updateNChList::=====");
         if (null != ch_list && ch_list.length > 0) {
             mNotificationChAdapater = new CharacteristicAdapter(this, ch_list);
             mSPNCh.setAdapter(mNotificationChAdapater);
-            mSPNCh.setSelection(0);
         }
     }
 }

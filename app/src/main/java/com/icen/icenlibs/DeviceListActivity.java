@@ -88,8 +88,8 @@ public class DeviceListActivity extends AppCompatActivity implements
     public void onItemClick(AdapterView<?> adapterView, View view, int selected_index, long l) {
         AppLogUtils.outputActivityLog("DeviceListActivity::index= " + selected_index);
         Bundle select_device = (Bundle) mDeviceListAdapter.getItem(selected_index);
-        Intent result_intent = getIntent();
-        result_intent.putExtra(KEY_RESULT_BUNDLE, select_device);
+        Intent result_intent = new Intent();
+        result_intent.putExtras(select_device);
         setResult(RESULT_OK, result_intent);
         finish();
     }

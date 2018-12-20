@@ -63,6 +63,7 @@ public class BleManagerService extends Service {
 
     private String mSourceDeviceName, mSourceDeviceMAC;
     private ArrayList<BluetoothGattService> mAllServices;
+    private HashMap<String, List<BluetoothGattCharacteristic>> mAllChMap;
     private boolean mAutoConnect, mIsScanning;
     private long mScanOvertime;
 
@@ -133,7 +134,7 @@ public class BleManagerService extends Service {
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
-            String device_mac = bluetoothDevice.getAddress().toLowerCase(Locale.getDefault());
+            String device_mac = bluetoothDevice.getAddress();
             String device_name = (TextUtils.isEmpty(bluetoothDevice.getName())) ?
                         getString(R.string.default_device_name) : bluetoothDevice.getName().trim();
             String device_class = bluetoothDevice.getBluetoothClass().toString();
@@ -235,8 +236,17 @@ public class BleManagerService extends Service {
                             mAllServices = null;
                         }
                         mAllServices = new ArrayList<>();
+                        mAllChMap = new HashMap<>();
                         for (int service_index = 0; service_index < all_services.size(); service_index++){
-                            mAllServices.add(all_services.get(service_index));
+                            BluetoothGattService current_service = all_services.get(service_index);
+                            String service_uuid = current_service.getUuid().toString();
+                            mAllServices.add(current_service);
+                            List<BluetoothGattCharacteristic> all_chs = current_service.getCharacteristics();
+                            BleLogUtils.outputServiceLog("gatt_callback::onServicesDiscovered::s_uuid= " + service_uuid + " ch_size= " +
+                                    ((null == all_chs || all_chs.size() <= 0) ? " -1 " : String.valueOf(all_chs.size())));
+                            if (null != all_chs && all_chs.size() > 0 ) {
+                                mAllChMap.put(service_uuid, all_chs);
+                            }
                         }
                         if (null != mBleOpCallback) {
                             try {
@@ -531,10 +541,10 @@ public class BleManagerService extends Service {
         public Bundle[] getCharacteristic(String input_ch_uuid) throws RemoteException {
             BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::params= " + input_ch_uuid);
             Bundle[] all_ch_bundle = null;
-            if (!TextUtils.isEmpty(input_ch_uuid) && null != mAllServices && mAllServices.size() > 0){
-                for (BluetoothGattService current_service : mAllServices) {
-                    String current_service_uuid = current_service.getUuid().toString();
-                    List<BluetoothGattCharacteristic> current_ch_list = current_service.getCharacteristics();
+            if (!TextUtils.isEmpty(input_ch_uuid) && null != mAllChMap && mAllChMap.size() > 0){
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()){
+                    String current_service_uuid = ch_entry.getKey();
+                    List<BluetoothGattCharacteristic> current_ch_list = ch_entry.getValue();
                     BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::Service= " + current_service_uuid +
                                                 " found ch total= " + ((null != current_ch_list && current_ch_list.size() > 0) ?
                                                                         String.valueOf(current_ch_list.size()) : "-1"));
@@ -556,8 +566,8 @@ public class BleManagerService extends Service {
                             ch_bundle.putInt(BleLibsConfig.LE_CHARACTERISTIC_PROPERTIES, ch_pro);
                             all_ch_bundle[ch_index] = ch_bundle;
                         }
+                        break;
                     }
-                    break;
                 }
             }
             BleLogUtils.outputServiceLog("BleOpImpl::getCharacteristic::service= " + input_ch_uuid +

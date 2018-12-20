@@ -52,8 +52,8 @@ public class CharacteristicAdapter extends BaseAdapter {
         Bundle current_bundle = mAllChs[position];
         tv_name.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_NAME));
         tv_uuid.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_UUID));
-        tv_property.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_PROPERTIES));
-        tv_permission.setText(current_bundle.getString(BleLibsConfig.LE_CHARACTERISTIC_PERMISSION));
+        tv_property.setText(String.valueOf(current_bundle.getInt(BleLibsConfig.LE_CHARACTERISTIC_PROPERTIES)));
+        tv_permission.setText(String.valueOf(current_bundle.getInt(BleLibsConfig.LE_CHARACTERISTIC_PERMISSION)));
         return convertView;
     }
 }
