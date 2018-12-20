@@ -704,11 +704,11 @@ public class BleManagerService extends Service {
                     " has_connect= " + hasConnectToDevice());
             BluetoothGattCharacteristic target_ch = null;
             //设置之前必须外设处于连接状态，并且外设有一些服务
-            if (hasConnectToDevice() && null != mAllServices && mAllServices.size() > 0 &&
+            if (hasConnectToDevice() && null != mAllChMap && mAllChMap.size() > 0 &&
                     !TextUtils.isEmpty(notification_uuid)) {
 
-                for (BluetoothGattService current_service : mAllServices) {
-                    List<BluetoothGattCharacteristic> ch_list = current_service.getCharacteristics();
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()) {
+                    List<BluetoothGattCharacteristic> ch_list = ch_entry.getValue();
                     if (null != ch_list && ch_list.size() > 0 ) {
                         for (BluetoothGattCharacteristic current_ch : ch_list) {
                             String ch_uuid = current_ch.getUuid().toString();
@@ -770,11 +770,11 @@ public class BleManagerService extends Service {
         @Override
         public boolean readCharacteristic(String read_uuid) throws RemoteException {
             boolean is_success = false;
-            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            int service_list_count = (null != mAllChMap && mAllChMap.size() > 0) ? mAllChMap.size() : 0;
             if (!TextUtils.isEmpty(read_uuid) && service_list_count > 0) {
                 BluetoothGattCharacteristic target_ch = null;
-                for (BluetoothGattService current_service : mAllServices) {
-                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()) {
+                    List<BluetoothGattCharacteristic> ch_in_service = ch_entry.getValue();
                     if (null != ch_in_service && ch_in_service.size() > 0) {
                         for (BluetoothGattCharacteristic current_ch : ch_in_service) {
                             String ch_uuid = current_ch.getUuid().toString();
@@ -799,11 +799,11 @@ public class BleManagerService extends Service {
         @Override
         public boolean writeCharacteristic(String write_uuid, byte[] write_content) throws RemoteException {
             boolean is_success = false;
-            int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
+            int service_list_count = (null != mAllChMap && mAllChMap.size() > 0) ? mAllChMap.size() : 0;
             if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
                 BluetoothGattCharacteristic target_ch = null;
-                for (BluetoothGattService current_service : mAllServices) {
-                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()) {
+                    List<BluetoothGattCharacteristic> ch_in_service = ch_entry.getValue();
                     if (null != ch_in_service && ch_in_service.size() > 0) {
                         for (BluetoothGattCharacteristic current_ch : ch_in_service) {
                             String ch_uuid = current_ch.getUuid().toString();
@@ -833,8 +833,8 @@ public class BleManagerService extends Service {
             int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
             if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
                 BluetoothGattCharacteristic target_ch = null;
-                for (BluetoothGattService current_service : mAllServices) {
-                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()) {
+                    List<BluetoothGattCharacteristic> ch_in_service = ch_entry.getValue();
                     if (null != ch_in_service && ch_in_service.size() > 0) {
                         for (BluetoothGattCharacteristic current_ch : ch_in_service) {
                             String ch_uuid = current_ch.getUuid().toString();
@@ -864,8 +864,8 @@ public class BleManagerService extends Service {
             int service_list_count = (null != mAllServices && mAllServices.size() > 0) ? mAllServices.size() : 0;
             if (!TextUtils.isEmpty(write_uuid) && service_list_count > 0) {
                 BluetoothGattCharacteristic target_ch = null;
-                for (BluetoothGattService current_service : mAllServices) {
-                    List<BluetoothGattCharacteristic> ch_in_service = current_service.getCharacteristics();
+                for (Map.Entry<String, List<BluetoothGattCharacteristic>> ch_entry : mAllChMap.entrySet()) {
+                    List<BluetoothGattCharacteristic> ch_in_service = ch_entry.getValue();
                     if (null != ch_in_service && ch_in_service.size() > 0) {
                         for (BluetoothGattCharacteristic current_ch : ch_in_service) {
                             String ch_uuid = current_ch.getUuid().toString();
