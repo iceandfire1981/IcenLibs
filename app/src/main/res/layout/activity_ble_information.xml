@@ -168,7 +168,25 @@
             android:text="@string/ble_common_function"
             android:textSize="20dp"
             android:gravity="center_vertical"/>
+    </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.3"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/b_i_battery"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:text="@string/ble_common_battery"/>
+        <Button
+            android:id="@+id/b_i_rssi"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:text="@string/ble_common_rssi"/>
     </LinearLayout>
 
 </LinearLayout>

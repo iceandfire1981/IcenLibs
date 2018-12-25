@@ -130,6 +130,18 @@ public class BleBaseActivity extends AppCompatActivity
                 " uuid= " + ch_uuid + " data= " + Arrays.toString(ble_value));
     }
 
+    @Override
+    public void onReadRSSI(boolean is_success, int current_rssi) {
+        BleLogUtils.outputActivityLog("BleBaseActivity::onReadRSSI::result= " + is_success +
+                " value= " + current_rssi);
+    }
+
+    @Override
+    public void onReadBattery(boolean is_success, byte[] ble_value) {
+        BleLogUtils.outputActivityLog("BleBaseActivity::onReadBattery::result= " + is_success +
+                " value= " + Arrays.toString(ble_value));
+    }
+
     /**
      * 启动管理器
      */

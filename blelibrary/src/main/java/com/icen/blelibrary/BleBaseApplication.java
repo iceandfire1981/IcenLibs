@@ -99,4 +99,16 @@ public class BleBaseApplication extends Application
                 ((null == ble_value || ble_value.length <= 0) ?
                         "No content" : Arrays.toString(ble_value)));
     }
+
+    @Override
+    public void onReadRSSI(boolean is_success, int current_rssi) {
+        BleLogUtils.outputApplicationLog("onReadRSSI::result= " + is_success +
+                " value= " + current_rssi);
+    }
+
+    @Override
+    public void onReadBattery(boolean is_success, byte[] ble_value) {
+        BleLogUtils.outputApplicationLog("onReadBattery::result= " + is_success +
+                " value= " + Arrays.toString(ble_value));
+    }
 }

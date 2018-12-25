@@ -103,6 +103,10 @@ public final class BleLibsConfig {
      */
     public static final String BROADCAST_INFO_SIGNAL = "device_signal";
 
+    /**
+     * 电源信息服务
+     */
+    public static final String BATTERY_CH_NAME = "Battery";
 
     /**
      * 启动BLE管理服务

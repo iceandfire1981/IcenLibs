@@ -1,6 +1,7 @@
 package com.icen.icenlibs;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -131,7 +132,7 @@ public class BleInformationActivity extends BleBaseActivity
     private View mVOperationRoot, mVNotificationRoot;
     private EditText mETContent;
     private TextView mTVRWResult, mTVNotificationResult;
-    private Button   mBTRead, mBTWrite, mBTNSettings;
+    private Button   mBTRead, mBTWrite, mBTNSettings, mBTBattery, mBTRSSI;
     private Spinner  mSPRWService, mSPRWCh, mSPNService, mSPNCh;
 
     private ServicesAdapter mRWServiceAdapter, mNotificationServiceAdapater;
@@ -170,6 +171,10 @@ public class BleInformationActivity extends BleBaseActivity
         mBTWrite.setOnClickListener(this);
         mBTNSettings = (Button) findViewById(R.id.b_i_n_apply);
         mBTNSettings.setOnClickListener(this);
+        mBTBattery = (Button) findViewById(R.id.b_i_battery);
+        mBTBattery.setOnClickListener(this);
+        mBTRSSI = (Button) findViewById(R.id.b_i_rssi);
+        mBTRSSI.setOnClickListener(this);
 
         mVOperationRoot = findViewById(R.id.b_i_rw_root);
         mVNotificationRoot = findViewById(R.id.b_i_n_root);
@@ -281,6 +286,30 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     @Override
+    public void onReadRSSI(boolean is_success, final int current_rssi){
+        if (is_success) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(BleInformationActivity.this, "rssi= " + current_rssi, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onReadBattery(boolean is_success, final byte[] ble_value){
+        if (is_success) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(BleInformationActivity.this, "rssi= " + Arrays.toString(ble_value), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         int view_id = v.getId();
         switch (view_id) {
@@ -290,13 +319,29 @@ public class BleInformationActivity extends BleBaseActivity
                 break;
             case R.id.b_i_rw_write:
                 String write_content = mETContent.getText().toString();
-                if (!TextUtils.isEmpty(mCurrentRWChUUID) && !TextUtils.isEmpty(write_content)) {
-                    mBleManager.writeCharacteristic(mCurrentRWChUUID, write_content);
+                if(!TextUtils.isEmpty(write_content) && "a".equalsIgnoreCase(write_content)){//开启功能
+                    mBleManager.writeCharacteristic(mCurrentRWChUUID, 31, BluetoothGattCharacteristic.FORMAT_UINT8);
+                } else if(!TextUtils.isEmpty(write_content) && "b".equalsIgnoreCase(write_content)) {//关闭功能
+                    mBleManager.writeCharacteristic(mCurrentRWChUUID, 23, BluetoothGattCharacteristic.FORMAT_UINT8);
+                } else {
+                    if (!TextUtils.isEmpty(mCurrentRWChUUID) && !TextUtils.isEmpty(write_content)) {
+                        mBleManager.writeCharacteristic(mCurrentRWChUUID, write_content);
+                    }
                 }
                 break;
             case R.id.b_i_n_apply:
                 if (!TextUtils.isEmpty(mCurrentNChUUID))
                     mBleManager.initialNotification(mCurrentNChUUID);
+                break;
+            case R.id.b_i_battery:
+                if (! mBleManager.readBattery()) {
+                    Toast.makeText(this, "Operation false_1", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.b_i_rssi:
+                if (! mBleManager.readRSSI()) {
+                    Toast.makeText(this, "Operation false_2", Toast.LENGTH_LONG).show();
+                }
                 break;
             default:
                 break;

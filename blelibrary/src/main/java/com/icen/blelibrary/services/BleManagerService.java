@@ -58,6 +58,7 @@ public class BleManagerService extends Service {
     private BluetoothAdapter mBleAdapter;
     private BluetoothDevice mCurrentDevice;
     private BluetoothGatt mCurrentGATT;
+    private BluetoothGattCharacteristic mBatteryCharacteristic;
 
     private HashMap<String, Bundle> mCurrentDeviceMap;
 
@@ -185,6 +186,8 @@ public class BleManagerService extends Service {
                 if (BluetoothProfile.STATE_CONNECTED == newState) {//外设连接成功
                     mCurrentGATT = gatt;
                     boolean is_op_success = gatt.discoverServices();
+                    mBatteryCharacteristic = null;
+
                     if (!is_op_success) {
                         try {
                             mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
@@ -240,6 +243,7 @@ public class BleManagerService extends Service {
                         for (int service_index = 0; service_index < all_services.size(); service_index++){
                             BluetoothGattService current_service = all_services.get(service_index);
                             String service_uuid = current_service.getUuid().toString();
+                            String service_name = BleCommonUtils.lookupService(service_uuid);
                             mAllServices.add(current_service);
                             List<BluetoothGattCharacteristic> all_chs = current_service.getCharacteristics();
                             BleLogUtils.outputServiceLog("gatt_callback::onServicesDiscovered::s_uuid= " + service_uuid + " ch_size= " +
@@ -247,6 +251,12 @@ public class BleManagerService extends Service {
                             if (null != all_chs && all_chs.size() > 0 ) {
                                 mAllChMap.put(service_uuid, all_chs);
                             }
+
+                            if (!TextUtils.isEmpty(service_name) &&
+                                    service_name.startsWith(BleLibsConfig.BATTERY_CH_NAME)) {
+                                mBatteryCharacteristic = all_chs.get(0);
+                            }
+
                         }
                         if (null != mBleOpCallback) {
                             try {
@@ -274,9 +284,20 @@ public class BleManagerService extends Service {
 
              if (null != mBleOpCallback) {
                  try {
-                     mBleOpCallback.onReadCharacteristic((status == BluetoothGatt.GATT_SUCCESS),
-                             characteristic.getUuid().toString(),
-                             characteristic.getValue());
+                     boolean is_battery = false;
+                     if (null != mBatteryCharacteristic) {
+                         String current_uuid = characteristic.getUuid().toString();
+                         String target_uuid = mBatteryCharacteristic.getUuid().toString();
+                         is_battery = current_uuid.equalsIgnoreCase(target_uuid);
+                     }
+
+                     if (is_battery){
+                        mBleOpCallback.onReadBattery((status == BluetoothGatt.GATT_SUCCESS),  characteristic.getValue());
+                     } else {
+                         mBleOpCallback.onReadCharacteristic((status == BluetoothGatt.GATT_SUCCESS),
+                                 characteristic.getUuid().toString(),
+                                 characteristic.getValue());
+                     }
                  } catch (RemoteException e) {
                      e.printStackTrace();
                  }
@@ -342,6 +363,15 @@ public class BleManagerService extends Service {
          @Override
          public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
              super.onReadRemoteRssi(gatt, rssi, status);
+             BleLogUtils.outputServiceLog("BluetoothGattCallback::onReadRemoteRssi::rssi= " +
+                     rssi + " status = " + status);
+             if (null != mBleOpCallback) {
+                 try {
+                     mBleOpCallback.onReadRSSI((status == BluetoothGatt.GATT_SUCCESS), rssi);
+                 } catch (Exception e) {
+                     e.printStackTrace();
+                 }
+             }
          }
 
          @Override
@@ -511,6 +541,20 @@ public class BleManagerService extends Service {
                 }
                 return all_devices;
             }
+        }
+
+        @Override
+        public boolean getBatteryLevel(){
+            if (null != mBatteryCharacteristic &&
+                    (mBatteryCharacteristic.getProperties() | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                mCurrentGATT.readCharacteristic(mBatteryCharacteristic);//等待回调
+            }
+            return false;
+        }
+
+        @Override
+        public boolean getRssi(){
+            return mCurrentGATT.readRemoteRssi();
         }
 
         @Override

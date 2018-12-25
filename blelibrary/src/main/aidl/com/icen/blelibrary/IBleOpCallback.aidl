@@ -10,4 +10,6 @@ interface IBleOpCallback {
     void onCharacteristicChange(boolean is_success, String ch_uuid, in byte[] ble_value);
     void onWriteCharacteristic(boolean is_success, String ch_uuid, in byte[] ble_value);
     void onDescriptorWrite(boolean is_success, String ch_uuid);
+    void onReadBattery(boolean is_success, in byte[] ble_value);
+    void onReadRSSI(boolean is_success, int current_rssi);
 }

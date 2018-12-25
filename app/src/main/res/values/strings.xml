@@ -23,4 +23,6 @@
     <string name="ble_common_characteristic">特征</string>
     <string name="ble_common_read">读特征</string>
     <string name="ble_common_write">命令发送</string>
+    <string name="ble_common_battery">电量</string>
+    <string name="ble_common_rssi">信号</string>
 </resources>

@@ -487,6 +487,29 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_success;
     }
 
+    public boolean readBattery(){
+        boolean is_success = false;
+        if (null != mBleOp) {
+            try {
+                is_success = mBleOp.getBatteryLevel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return is_success;
+    }
+
+    public boolean readRSSI(){
+        boolean is_success = false;
+        if (null != mBleOp) {
+            try {
+                is_success = mBleOp.getRssi();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return is_success;
+    }
     //-----------------------------------------implement ServiceConnection interface--------------------------------------//
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -577,6 +600,20 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
     @Override
     public void onDescriptorWrite(boolean is_success, String ch_uuid) throws RemoteException {
 
+    }
+
+    @Override
+    public void onReadRSSI(boolean is_success, int current_rssi){
+        BleLogUtils.outputManagerLog("onReadRSSI::success= " + is_success +  " value= " + current_rssi);
+        if (null != mClientCallback)
+            mClientCallback.onReadRSSI(is_success, current_rssi);
+    }
+
+    @Override
+    public void onReadBattery(boolean is_success,  byte[] ble_value){
+        BleLogUtils.outputManagerLog("onReadBattery::success= " + is_success +  " value= " + Arrays.toString(ble_value));
+        if (null != mClientCallback)
+            mClientCallback.onReadBattery(is_success, ble_value);
     }
     //-----------------------------------------implement IBleOpCallback interface----------------------------------------//
 

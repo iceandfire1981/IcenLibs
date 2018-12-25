@@ -155,4 +155,14 @@ public class DeviceListActivity extends AppCompatActivity implements
     public void onChChange(boolean is_success, String ch_uuid, byte[] ble_value) {
 
     }
+
+    @Override
+    public void onReadRSSI(boolean is_success, int current_rssi) {
+
+    }
+
+    @Override
+    public void onReadBattery(boolean is_success, byte[] ble_value) {
+
+    }
 }

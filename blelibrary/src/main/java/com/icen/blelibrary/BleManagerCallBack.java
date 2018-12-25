@@ -9,4 +9,6 @@ public interface BleManagerCallBack {
     void onReadCh(int read_step, boolean is_success, String read_uuid, byte[] respond_data);
     void onWriteCh(int write_step, boolean is_success, String write_uuid, byte[] respond_data);
     void onChChange(boolean is_success, String ch_uuid, byte[] ble_value);
+    void onReadRSSI(boolean is_success, int current_rssi);
+    void onReadBattery(boolean is_success,  byte[] ble_value);
 }
