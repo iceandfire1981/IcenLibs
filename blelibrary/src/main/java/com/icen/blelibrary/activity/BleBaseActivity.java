@@ -20,7 +20,8 @@ public class BleBaseActivity extends AppCompatActivity
                                       implements BleManagerCallBack {
 
     private static String[] REQUEST_PERMISSION = new String[]{
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
     private static final int PERMISSION_REQUEST_CODE = 9000;
 

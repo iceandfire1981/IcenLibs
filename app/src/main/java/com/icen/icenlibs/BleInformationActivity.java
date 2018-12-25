@@ -18,10 +18,8 @@ import com.icen.blelibrary.activity.BleBaseActivity;
 import com.icen.blelibrary.config.BleLibsConfig;
 import com.icen.icenlibs.adapter.CharacteristicAdapter;
 import com.icen.icenlibs.adapter.ServicesAdapter;
+import com.icen.icenlibs.util.FileUtils;
 
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BleInformationActivity extends BleBaseActivity
@@ -143,6 +141,8 @@ public class BleInformationActivity extends BleBaseActivity
     private String mCurrentRWChUUID, mCurrentNChUUID;
     private Bundle[] mServicesList;
 
+    private FileUtils mFileUtils;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -150,7 +150,7 @@ public class BleInformationActivity extends BleBaseActivity
 
         mTargetName = getIntent().getStringExtra(KEY_TARGET_NAME);
         mTargetAddress = getIntent().getStringExtra(KEY_TARGET_ADDRESS);
-
+        mFileUtils = new FileUtils(this);
         if (TextUtils.isEmpty(mTargetAddress)) {
             Toast.makeText(this, "Invalid address or name!", Toast.LENGTH_LONG).show();
             finish();
@@ -277,9 +277,19 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     @Override
-    public void onChChange(boolean is_success, String ch_uuid, byte[] ble_value) {
+    public void onChChange(boolean is_success, String ch_uuid, final byte[] ble_value) {
         if (is_success) {
             mTVNotificationResult.setText(Arrays.toString(ble_value));
+            AppLogUtils.outputActivityLog("===onChChange===::ble_value= " + ble_value.length);
+            if (null != ble_value && ble_value.length > 127){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mFileUtils.processWriteFile(ble_value);
+                    }
+                });
+
+            }
         } else {
             mTVNotificationResult.setText("false");
         }
@@ -320,9 +330,12 @@ public class BleInformationActivity extends BleBaseActivity
             case R.id.b_i_rw_write:
                 String write_content = mETContent.getText().toString();
                 if(!TextUtils.isEmpty(write_content) && "a".equalsIgnoreCase(write_content)){//开启功能
+                    AppLogUtils.outputActivityLog("BleInformationActivity::onClick::path= " + FileUtils.FILE_PATH);
                     mBleManager.writeCharacteristic(mCurrentRWChUUID, 31, BluetoothGattCharacteristic.FORMAT_UINT8);
+                    mFileUtils.beginWriteFile();
                 } else if(!TextUtils.isEmpty(write_content) && "b".equalsIgnoreCase(write_content)) {//关闭功能
                     mBleManager.writeCharacteristic(mCurrentRWChUUID, 23, BluetoothGattCharacteristic.FORMAT_UINT8);
+                    mFileUtils.endWriteFile();
                 } else {
                     if (!TextUtils.isEmpty(mCurrentRWChUUID) && !TextUtils.isEmpty(write_content)) {
                         mBleManager.writeCharacteristic(mCurrentRWChUUID, write_content);
