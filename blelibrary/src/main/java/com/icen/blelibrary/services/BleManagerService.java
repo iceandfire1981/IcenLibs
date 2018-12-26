@@ -197,14 +197,14 @@ public class BleManagerService extends Service {
                         }
                     }
                 } else if (BluetoothProfile.STATE_DISCONNECTED == newState) {//断开操作成功
-                    mCurrentGATT = null;
-                    gatt.close();
                     try {
                         if (null != mBleOpCallback)
-                            mBleOpCallback.onConnectToDevice(true, "", "");
+                            mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    mCurrentGATT = null;
+                    gatt.close();
 
                 }
              } else if (BluetoothGatt.GATT_FAILURE == status) {//操作失败
@@ -215,6 +215,14 @@ public class BleManagerService extends Service {
                         e.printStackTrace();
                     }
                 }
+             } else {
+                 if (null != mBleOpCallback) {
+                     try {
+                         mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
+                     } catch (Exception e) {
+                         e.printStackTrace();
+                     }
+                 }
              }
          }
 
