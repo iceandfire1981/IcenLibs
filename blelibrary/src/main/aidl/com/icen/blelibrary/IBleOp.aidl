@@ -30,4 +30,6 @@ interface IBleOp {
 
     void setBleOpCallback(in IBleOpCallback op_callback);
     boolean hasConnectToDevice();
+    void saveAutoReconnect(boolean reconnect_flag);
+    boolean getAutoReconnect();
 }

@@ -304,7 +304,6 @@ public class BleInformationActivity extends BleBaseActivity
                     if (null != ble_value && ble_value.length <= 1){
                         Toast.makeText(BleInformationActivity.this, "data= " + Arrays.toString(ble_value), Toast.LENGTH_LONG).show();
                     }
-
                     AppLogUtils.outputActivityLog("===onChChange===::ble_value= " + ble_value.length);
                     if (null != ble_value && ble_value.length > 127){
                         runOnUiThread(new Runnable() {

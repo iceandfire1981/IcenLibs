@@ -116,10 +116,6 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         mClientCallback = call_back;
     }
 
-    /**
-     * 判断当前是否已经与LE外设有连接
-     * @return TRUE 表示已经连接上； FALSE：表示没有任何连接
-     */
     public boolean hasConnectToDevice(){
         boolean is_success = false;
         if (isReady()){
@@ -130,6 +126,30 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
             }
         }
         BleLogUtils.outputManagerLog("hasConnectToDevice::System Ready= " + isReady() + " is_success= " + is_success);
+        return is_success;
+    }
+
+    public void saveAutoReconnect(boolean reconnect_flag){
+        if (isReady()){
+            try {
+                mBleOp.saveAutoReconnect(reconnect_flag);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("saveAutoReconnect::System Ready= " + isReady());
+    }
+
+    public boolean getAutoReconnect(){
+        boolean is_success = false;
+        if (isReady()){
+            try {
+                is_success = mBleOp.getAutoReconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("getAutoReconnect::System Ready= " + isReady() + " is_success= " + is_success);
         return is_success;
     }
 

@@ -1015,5 +1015,18 @@ public class BleManagerService extends Service {
             BleLogUtils.outputServiceLog("hasConnectToDevice::result= " + has_connect);
             return has_connect;
         }
+
+        @Override
+        public void saveAutoReconnect(boolean reconnect_flag) throws RemoteException {
+            BleLogUtils.outputServiceLog("saveAutoReconnect::param= " + reconnect_flag);
+            BleLibsConfig.saveAutoReConnectInFile(BleManagerService.this, reconnect_flag);
+        }
+
+        @Override
+        public boolean getAutoReconnect() throws RemoteException {
+            boolean reconnect_flag = BleLibsConfig.getAutoReConnectInFile(BleManagerService.this);
+            BleLogUtils.outputServiceLog("saveAutoReconnect::result= " + reconnect_flag);
+            return reconnect_flag;
+        }
     }
 }
