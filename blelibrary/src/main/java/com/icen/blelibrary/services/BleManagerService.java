@@ -788,6 +788,9 @@ public class BleManagerService extends Service {
                     is_success = false;
                 else {
                     //BluetoothGatt b_gatt = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
+                    mAutoReConnect = BleLibsConfig.getAutoReConnectInFile(BleManagerService.this);
+                    BleLogUtils.outputServiceLog("BleOpImpl::connectToDevice::info::address= " + remote_address +
+                            " Scanning= " + mIsScanning + " reconnect_flag= " + mAutoReConnect);
                     BluetoothGatt b_gatt = mCurrentDevice.connectGatt(mContext, mAutoReConnect, mGattCallback);
                     if (null == b_gatt) {
                         is_success = false;
