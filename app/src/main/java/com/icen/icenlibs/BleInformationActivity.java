@@ -130,7 +130,7 @@ public class BleInformationActivity extends BleBaseActivity
     private View mVOperationRoot, mVNotificationRoot;
     private EditText mETContent;
     private TextView mTVRWResult, mTVNotificationResult;
-    private Button   mBTRead, mBTWrite, mBTNSettings, mBTBattery, mBTRSSI;
+    private Button   mBTRead, mBTWrite, mBTNSettings, mBTBattery, mBTRSSI, mBTDisconnect;
     private Spinner  mSPRWService, mSPRWCh, mSPNService, mSPNCh;
 
     private ServicesAdapter mRWServiceAdapter, mNotificationServiceAdapater;
@@ -175,6 +175,8 @@ public class BleInformationActivity extends BleBaseActivity
         mBTBattery.setOnClickListener(this);
         mBTRSSI = (Button) findViewById(R.id.b_i_rssi);
         mBTRSSI.setOnClickListener(this);
+        mBTDisconnect = (Button) findViewById(R.id.b_i_disconnect);
+        mBTDisconnect.setOnClickListener(this);
 
         mVOperationRoot = findViewById(R.id.b_i_rw_root);
         mVNotificationRoot = findViewById(R.id.b_i_n_root);
@@ -207,7 +209,7 @@ public class BleInformationActivity extends BleBaseActivity
 
     @Override
     public void onConnectDevice(boolean is_success, final String device_name, final String device_mac) {
-        AppLogUtils.outputActivityLog("BleInformationActivity::onBackPressed::is_success= " + is_success +
+        AppLogUtils.outputActivityLog("BleInformationActivity::onConnectDevice::is_success= " + is_success +
                                     " device_name = " + device_name + " device_mac= " + device_mac );
         if (is_success){
             mServicesList = null;
@@ -238,16 +240,26 @@ public class BleInformationActivity extends BleBaseActivity
 
             }
         } else {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
-                    Toast.makeText(BleInformationActivity.this, false_result, Toast.LENGTH_LONG).show();
-                    finish();
-                }
-            });
+            if (TextUtils.isEmpty(device_name)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String false_result = getResources().getString(R.string.ble_common_connect_false, device_name, device_mac);
+                        Toast.makeText(BleInformationActivity.this, false_result, Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String false_result = getResources().getString(R.string.ble_common_connect_exception, device_name, device_mac);
+                        Toast.makeText(BleInformationActivity.this, false_result, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+            }
 
-        }
     }
 
     @Override
@@ -259,12 +271,18 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     @Override
-    public void onReadCh(int read_step, boolean is_success, String read_uuid, byte[] respond_data) {
-        if (is_success) {
-            mTVRWResult.setText(Arrays.toString(respond_data));
-        } else {
-            mTVRWResult.setText("False");
-        }
+    public void onReadCh(int read_step, final boolean is_success, final String read_uuid, final byte[] respond_data) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (is_success) {
+                    mTVRWResult.setText(Arrays.toString(respond_data));
+                    Toast.makeText(BleInformationActivity.this, "data= " + Arrays.toString(respond_data), Toast.LENGTH_LONG).show();
+                } else {
+                    mTVRWResult.setText("False");
+                }
+            }
+        });
     }
 
     @Override
@@ -277,22 +295,32 @@ public class BleInformationActivity extends BleBaseActivity
     }
 
     @Override
-    public void onChChange(boolean is_success, String ch_uuid, final byte[] ble_value) {
-        if (is_success) {
-            mTVNotificationResult.setText(Arrays.toString(ble_value));
-            AppLogUtils.outputActivityLog("===onChChange===::ble_value= " + ble_value.length);
-            if (null != ble_value && ble_value.length > 127){
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mFileUtils.processWriteFile(ble_value);
+    public void onChChange(final boolean is_success, final String ch_uuid, final byte[] ble_value) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (is_success) {
+                    mTVNotificationResult.setText(Arrays.toString(ble_value));
+                    if (null != ble_value && ble_value.length <= 1){
+                        Toast.makeText(BleInformationActivity.this, "data= " + Arrays.toString(ble_value), Toast.LENGTH_LONG).show();
                     }
-                });
 
+                    AppLogUtils.outputActivityLog("===onChChange===::ble_value= " + ble_value.length);
+                    if (null != ble_value && ble_value.length > 127){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mFileUtils.processWriteFile(ble_value);
+                            }
+                        });
+
+                    }
+                } else {
+                    mTVNotificationResult.setText("false");
+                }
             }
-        } else {
-            mTVNotificationResult.setText("false");
-        }
+        });
+
     }
 
     @Override
@@ -354,6 +382,11 @@ public class BleInformationActivity extends BleBaseActivity
             case R.id.b_i_rssi:
                 if (! mBleManager.readRSSI()) {
                     Toast.makeText(this, "Operation false_2", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.b_i_disconnect:
+                if (! mBleManager.disconnect()){
+                    Toast.makeText(this, "Operation false_3", Toast.LENGTH_LONG).show();
                 }
                 break;
             default:

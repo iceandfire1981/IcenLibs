@@ -65,7 +65,7 @@ public class BleManagerService extends Service {
     private String mSourceDeviceName, mSourceDeviceMAC;
     private ArrayList<BluetoothGattService> mAllServices;
     private HashMap<String, List<BluetoothGattCharacteristic>> mAllChMap;
-    private boolean mAutoConnect, mIsScanning;
+    private boolean mAutoConnect, mAutoReConnect, mIsScanning;
     private long mScanOvertime;
 
     private Handler mServiceHandler = new Handler();
@@ -185,9 +185,31 @@ public class BleManagerService extends Service {
              if (BluetoothGatt.GATT_SUCCESS == status) {//操作成功
                 if (BluetoothProfile.STATE_CONNECTED == newState) {//外设连接成功
                     mCurrentGATT = gatt;
+                    String current_mac = gatt.getDevice().getAddress();
+                    String target_mac =  BleLibsConfig.getDeviceMacInFile(BleManagerService.this);
+                    String notification_uuid = BleLibsConfig.getNotifyUUIDInFile(BleManagerService.this);
+                    if (!TextUtils.isEmpty(target_mac) && target_mac.equalsIgnoreCase(current_mac)) {//当前连接的设备是历史设备
+                        if (null != mAllChMap && mAllChMap.size() > 0) {//之前已经发现过特征
+                            if (!TextUtils.isEmpty(notification_uuid)) {//之前已经设置过通知
+                                try {
+                                    mBleOpImpl.initialNotification(notification_uuid);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            try {
+                                if (null != mBleOpCallback)
+                                    mBleOpCallback.onConnectToDevice(true, gatt.getDevice().getAddress(), gatt.getDevice().getName());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            return;
+                        }
+                    }
+                    BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+                            " new_status= " + newState + " found services=============");
                     boolean is_op_success = gatt.discoverServices();
                     mBatteryCharacteristic = null;
-
                     if (!is_op_success) {
                         try {
                             if (null != mBleOpCallback)
@@ -199,13 +221,16 @@ public class BleManagerService extends Service {
                 } else if (BluetoothProfile.STATE_DISCONNECTED == newState) {//断开操作成功
                     try {
                         if (null != mBleOpCallback)
-                            mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
+                            mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), "");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     mCurrentGATT = null;
                     gatt.close();
-
+                    mAllChMap = null;
+                    mBatteryCharacteristic = null;
+                    mAllServices = null;
+                    BleLibsConfig.saveNotifyUUIDInFile(BleManagerService.this, "");
                 }
              } else if (BluetoothGatt.GATT_FAILURE == status) {//操作失败
                 if (null != mBleOpCallback) {
@@ -215,13 +240,30 @@ public class BleManagerService extends Service {
                         e.printStackTrace();
                     }
                 }
+                 mAllChMap = null;
+                 mBatteryCharacteristic = null;
+                 mAllServices = null;
+                 BleLibsConfig.saveNotifyUUIDInFile(BleManagerService.this, "");
              } else {
-                 if (null != mBleOpCallback) {
-                     try {
-                         mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
-                     } catch (Exception e) {
-                         e.printStackTrace();
+                 mAutoReConnect = BleLibsConfig.getAutoReConnectInFile(BleManagerService.this);
+                 if (mAutoReConnect){//允许等待重连
+                     if (null != mBleOpCallback) {
+                         try {
+                             mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
+                         } catch (Exception e) {
+                             e.printStackTrace();
+                         }
                      }
+                 } else {
+                     if (null != mBleOpCallback) {
+                         try {
+                             mBleOpCallback.onConnectToDevice(false, gatt.getDevice().getAddress(), gatt.getDevice().getName());
+                         } catch (Exception e) {
+                             e.printStackTrace();
+                         }
+                     }
+                     mCurrentGATT = null;
+                     gatt.close();
                  }
              }
          }
@@ -272,7 +314,6 @@ public class BleManagerService extends Service {
                                     service_name.startsWith(BleLibsConfig.BATTERY_CH_NAME)) {
                                 mBatteryCharacteristic = all_chs.get(0);
                             }
-
                         }
                         if (null != mBleOpCallback) {
                             try {
@@ -440,6 +481,7 @@ public class BleManagerService extends Service {
         mSourceDeviceMAC = BleLibsConfig.getDeviceMacInFile(this);
         mAutoConnect = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
         mScanOvertime = BleLibsConfig.getScanOvertime(BleManagerService.this);
+        mAutoReConnect = BleLibsConfig.getAutoReConnectInFile(BleManagerService.this);
         mIsScanning = false;
     }
 
@@ -745,7 +787,8 @@ public class BleManagerService extends Service {
                 if (null == mCurrentDevice)
                     is_success = false;
                 else {
-                    BluetoothGatt b_gatt = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
+                    //BluetoothGatt b_gatt = mCurrentDevice.connectGatt(mContext, false, mGattCallback);
+                    BluetoothGatt b_gatt = mCurrentDevice.connectGatt(mContext, mAutoReConnect, mGattCallback);
                     if (null == b_gatt) {
                         is_success = false;
                     } else {
@@ -796,6 +839,7 @@ public class BleManagerService extends Service {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    BleLibsConfig.saveNotifyUUIDInFile(BleManagerService.this, notification_uuid);
                 } else {
                     try {
                         mBleOpCallback.onInitialNotification(false, notification_uuid);
@@ -819,8 +863,10 @@ public class BleManagerService extends Service {
             BleLogUtils.outputServiceLog("BleOpImpl::disconnect::gatt= " + mCurrentGATT);
             if (null != mCurrentGATT) {
                 mCurrentGATT.disconnect();
-                mCurrentGATT.close();
+                //mCurrentGATT.close();
                 mCurrentGATT = null;
+                mAllChMap = null;
+                mBatteryCharacteristic = null;
                 return true;
             } else {
                 return false;

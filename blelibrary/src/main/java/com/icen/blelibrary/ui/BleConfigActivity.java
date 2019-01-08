@@ -11,10 +11,10 @@ import com.icen.blelibrary.config.BleLibsConfig;
 public class BleConfigActivity extends AppCompatActivity {
 
     private EditText mETOvertime;
-    private Switch   mSHAutoConnect;
+    private Switch   mSHAutoConnect, mSHAutoReConnect;
 
     private long mOvertime;
-    private boolean mAutoConnect;
+    private boolean mAutoConnect, mAutoReconnect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +22,7 @@ public class BleConfigActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ble_config);
         mETOvertime = (EditText) findViewById(R.id.config_over_time);
         mSHAutoConnect = (Switch) findViewById(R.id.config_auto_connect);
+        mSHAutoReConnect = (Switch) findViewById(R.id.config_auto_re_connect);
     }
 
     @Override
@@ -29,13 +30,16 @@ public class BleConfigActivity extends AppCompatActivity {
         super.onResume();
         mAutoConnect = BleLibsConfig.getAutoConnectInFile(this);
         mOvertime = BleLibsConfig.getScanOvertime(this);
+        mAutoReconnect = BleLibsConfig.getAutoReConnectInFile(this);
         mETOvertime.setText(String.valueOf(mOvertime));
         mSHAutoConnect.setChecked(mAutoConnect);
+        mSHAutoReConnect.setChecked(mAutoReconnect);
     }
 
     @Override
     public void finish() {
         BleLibsConfig.saveAutoConnectInFile(this, mSHAutoConnect.isChecked());
+        BleLibsConfig.saveAutoReConnectInFile(this, mSHAutoReConnect.isChecked());
         BleLibsConfig.saveScanOvertime(this, Long.parseLong(mETOvertime.getText().toString()));
         super.finish();
     }

@@ -25,6 +25,7 @@ public final class BleLibsConfig {
     private static final String ACTION_START_BLE_SERVICE = "com.icen.blelibrary.START_BLE_SERVICE";
 
     private static final boolean DEFAULT_ENABLED_AUTO_CONNECT = true;//是否自动连接（默认为自动连接）
+    private static final boolean DEFAULT_ENABLED_AUTO_RE_CONNECT = false;//是否自动回连，默认功能关闭
     private static final long    DEFAULT_SCAN_OVERTIME = 5000L;
     public  static final int     DEFAULT_RSSI = -1;//默认信号强度
     private static final String  BLE_DEVICE_SPILT = "|";
@@ -67,6 +68,10 @@ public final class BleLibsConfig {
      */
     private static final String BLE_CONFIG_AUTO_CONNECT = "ble_config_auto_connect";
     /**
+     * BLE管理服务配置文件：设备断开后是否自动等待回连。
+     */
+    private static final String BLE_CONFIG_AUTO_RE_CONNECT = "ble_config_auto_re_connect";
+    /**
      * BLE管理服务配置文件：设备扫描时间配置
      * 默认值：5秒
      */
@@ -80,6 +85,11 @@ public final class BleLibsConfig {
      * 成功链接的设备MAC地址
      */
     private static final String BLE_CONFIG_DEVICE_MAC = "ble_config_device_mac";
+
+    /**
+     * 历史通知UUID
+     */
+    private static final String BLE_CONFIG_NOTIFICATION_UUID = "ble_config_notify_uuid";
 
     /**
      * 广播数据消息配置：设备名称
@@ -149,6 +159,41 @@ public final class BleLibsConfig {
     }
 
     /**
+     * 获取系统配置：是否自动回连意外断开的设备
+     * @param ctx   上下文
+     * @return  true：需要自动连接，false：无需自动连接
+     */
+    public static final boolean getAutoReConnectInFile(Context ctx) {
+        boolean is_auto_connect = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
+                .getBoolean(BLE_CONFIG_AUTO_RE_CONNECT, DEFAULT_ENABLED_AUTO_RE_CONNECT);
+        BleLogUtils.outputUtilLog("BleLibsConfig::getAutoConnect= " + is_auto_connect);
+        return is_auto_connect;
+    }
+
+    /**
+     * 获取系统配置：上次成功设置的广播端特征UUID
+     * @param ctx
+     * @return
+     */
+    public static final String getNotifyUUIDInFile(Context ctx) {
+        String uuid = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE)
+                .getString(BLE_CONFIG_NOTIFICATION_UUID, "");
+        BleLogUtils.outputUtilLog("BleLibsConfig::getNotifyUUIDInFile= " + uuid);
+        return uuid;
+    }
+
+    /**
+     * 保存广播特征UUID
+     * @param ctx              上下文
+     * @param uuid  uuid
+     */
+    public static final  void saveNotifyUUIDInFile(Context ctx, String uuid) {
+        ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
+                .putString(BLE_CONFIG_NOTIFICATION_UUID, uuid)
+                .commit();
+    }
+
+    /**
      * 保存自动重连配置到配置文件中
      * @param ctx              上下文
      * @param is_auto_connect  重连标记
@@ -157,7 +202,17 @@ public final class BleLibsConfig {
         ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
                 .putBoolean(BLE_CONFIG_AUTO_CONNECT, is_auto_connect)
                 .commit();
-        BleLogUtils.outputUtilLog("BleLibsConfig::saveAutoConnectInFile= " + is_auto_connect);
+    }
+
+    /**
+     * 保存自动重连配置到配置文件中
+     * @param ctx              上下文
+     * @param is_auto_re_connect  重连标记
+     */
+    public static final  void saveAutoReConnectInFile(Context ctx, boolean is_auto_re_connect) {
+        ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).edit()
+                .putBoolean(BLE_CONFIG_AUTO_RE_CONNECT, is_auto_re_connect)
+                .commit();
     }
 
     /**
