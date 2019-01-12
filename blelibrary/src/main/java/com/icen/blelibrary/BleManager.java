@@ -129,6 +129,42 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         return is_success;
     }
 
+    /**
+     * 设置自动重连标志，该标志用于决定在扫描结束后是否自动连接已经成功连接的设备
+     * @param auto_connect_flag
+     */
+    public void saveAutoConnect(boolean auto_connect_flag){
+        if (isReady()){
+            try {
+                mBleOp.saveAutoConnect(auto_connect_flag);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("saveAutoConnect::System Ready= " + isReady());
+    }
+
+    /**
+     * 获取自动重连标志的设置
+     * @return 重连设置
+     */
+    public boolean getAutoConnect(){
+        boolean is_success = false;
+        if (isReady()){
+            try {
+                is_success = mBleOp.getAutoConnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        BleLogUtils.outputManagerLog("getAutoConnect::System Ready= " + isReady() + " is_success= " + is_success);
+        return is_success;
+    }
+
+    /**
+     * 设置自动回连标志，设备断开后恢复使用是否回连
+     * @param reconnect_flag
+     */
     public void saveAutoReconnect(boolean reconnect_flag){
         if (isReady()){
             try {
@@ -140,6 +176,10 @@ public final class BleManager extends IBleOpCallback.Stub implements ServiceConn
         BleLogUtils.outputManagerLog("saveAutoReconnect::System Ready= " + isReady());
     }
 
+    /**
+     * 获取自动回连标志
+     * @return
+     */
     public boolean getAutoReconnect(){
         boolean is_success = false;
         if (isReady()){

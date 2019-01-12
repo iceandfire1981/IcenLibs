@@ -361,7 +361,7 @@ public class BleInformationActivity extends BleBaseActivity
                     mBleManager.writeCharacteristic(mCurrentRWChUUID, 31, BluetoothGattCharacteristic.FORMAT_UINT8);
                     mFileUtils.beginWriteFile();
                 } else if(!TextUtils.isEmpty(write_content) && "b".equalsIgnoreCase(write_content)) {//关闭功能
-                    mBleManager.writeCharacteristic(mCurrentRWChUUID, 23, BluetoothGattCharacteristic.FORMAT_UINT8);
+                    mBleManager.writeCharacteristic(mCurrentRWChUUID, 0, BluetoothGattCharacteristic.FORMAT_UINT8);
                     mFileUtils.endWriteFile();
                 } else {
                     if (!TextUtils.isEmpty(mCurrentRWChUUID) && !TextUtils.isEmpty(write_content)) {

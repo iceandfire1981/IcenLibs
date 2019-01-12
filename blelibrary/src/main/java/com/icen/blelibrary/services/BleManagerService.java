@@ -465,6 +465,10 @@ public class BleManagerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         BleLogUtils.outputServiceLog("onBind::info= " + intent);
+        boolean auto_connect = intent.getBooleanExtra(BleLibsConfig.START_KEY_ENABLE_AUTO_CONNECT, BleLibsConfig.DEFAULT_ENABLED_AUTO_CONNECT);
+        BleLibsConfig.saveAutoConnectInFile(BleManagerService.this, auto_connect);
+        boolean auto_re_connect = intent.getBooleanExtra(BleLibsConfig.START_KEY_ENABLE_AUTO_RE_CONNECT, BleLibsConfig.DEFAULT_ENABLED_AUTO_RE_CONNECT);
+        BleLibsConfig.saveAutoReConnectInFile(BleManagerService.this, auto_re_connect);
         if (null == mBleOpImpl)
             mBleOpImpl = new BleOpImpl(this, mBluetoothGattCallback);
         return mBleOpImpl;
@@ -489,6 +493,7 @@ public class BleManagerService extends Service {
 
         private Context mContext;
         private BluetoothGattCallback mGattCallback;
+
         public BleOpImpl(Context ctx, BluetoothGattCallback gatt_callback){
             mContext = ctx;
             mGattCallback = gatt_callback;
@@ -1027,6 +1032,19 @@ public class BleManagerService extends Service {
             boolean reconnect_flag = BleLibsConfig.getAutoReConnectInFile(BleManagerService.this);
             BleLogUtils.outputServiceLog("saveAutoReconnect::result= " + reconnect_flag);
             return reconnect_flag;
+        }
+
+        @Override
+        public void saveAutoConnect(boolean auto_connect_flag){
+            BleLogUtils.outputServiceLog("saveAutoConnect::param= " + auto_connect_flag);
+            BleLibsConfig.saveAutoConnectInFile(BleManagerService.this, auto_connect_flag);
+        }
+
+        @Override
+        public boolean getAutoConnect(){
+            boolean auto_connect_flag = BleLibsConfig.getAutoConnectInFile(BleManagerService.this);
+            BleLogUtils.outputServiceLog("saveAutoReconnect::result= " + auto_connect_flag);
+            return  auto_connect_flag;
         }
     }
 }

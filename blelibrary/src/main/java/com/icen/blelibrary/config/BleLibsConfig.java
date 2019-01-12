@@ -16,6 +16,7 @@ import com.icen.blelibrary.utils.BleLogUtils;
  * 2、上一次成功连接的设备名称
  * 3、上一次成功连接的设备MAC
  * 4、上一次设置的用于通知的特征UUID
+ * 5、自动重连标志
  *
  * Created by icean on 2017/10/29.
  */
@@ -23,13 +24,19 @@ import com.icen.blelibrary.utils.BleLogUtils;
 public final class BleLibsConfig {
 
     private static final String ACTION_START_BLE_SERVICE = "com.icen.blelibrary.START_BLE_SERVICE";
+    /**
+     * 自动重连标志：默认值为@DEFAULT_ENABLED_AUTO_CONNECT
+     */
+    public static final String START_KEY_ENABLE_AUTO_CONNECT = "auto_connect_flag";
+    /**
+     *  自动回连标志：默认值为@DEFAULT_ENABLED_AUTO_RE_CONNECT
+     */
+    public static final String START_KEY_ENABLE_AUTO_RE_CONNECT = "auto_re_connect_flag";
 
-    private static final boolean DEFAULT_ENABLED_AUTO_CONNECT = true;//是否自动连接（默认为自动连接）
-    private static final boolean DEFAULT_ENABLED_AUTO_RE_CONNECT = false;//是否自动回连，默认功能关闭
+    public static final boolean DEFAULT_ENABLED_AUTO_CONNECT = false;//是否自动连接（默认为自动连接）
+    public static final boolean DEFAULT_ENABLED_AUTO_RE_CONNECT = false;//是否自动回连，默认功能关闭
     private static final long    DEFAULT_SCAN_OVERTIME = 5000L;
     public  static final int     DEFAULT_RSSI = -1;//默认信号强度
-    private static final String  BLE_DEVICE_SPILT = "|";
-    private static final String  BLE_DEVICE_INFO_SPILT = "%";
 
     public static final int      BLE_SWITCH_ON = 0;
     public static final int      BLE_SWITCH_OPENING = BLE_SWITCH_ON + 1;
@@ -125,10 +132,19 @@ public final class BleLibsConfig {
      * @return  true：启动成功；false：启动失败
      */
     public static final boolean startBleService(Context ctx, ServiceConnection service_connection) {
+        boolean is_success = startBleService(ctx, service_connection, DEFAULT_ENABLED_AUTO_CONNECT, DEFAULT_ENABLED_AUTO_RE_CONNECT);
+        BleLogUtils.outputUtilLog("BleLibsConfig::startBleService_0= " + is_success);
+        return is_success;
+    }
+
+    public static final boolean startBleService(Context ctx, ServiceConnection service_connection,
+                                                boolean auto_connect, boolean auto_re_connect) {
         Intent start_ble_service = new Intent(ACTION_START_BLE_SERVICE);
+        start_ble_service.putExtra(START_KEY_ENABLE_AUTO_CONNECT, auto_connect);
+        start_ble_service.putExtra(START_KEY_ENABLE_AUTO_RE_CONNECT, auto_re_connect);
         start_ble_service.setComponent(new ComponentName(ctx, BleManagerService.class));
         boolean is_success = ctx.bindService(start_ble_service, service_connection, Context.BIND_AUTO_CREATE);
-        BleLogUtils.outputUtilLog("BleLibsConfig::startBleService= " + is_success);
+        BleLogUtils.outputUtilLog("BleLibsConfig::startBleService_1= " + is_success);
         return false;
     }
 
@@ -266,12 +282,22 @@ public final class BleLibsConfig {
         }
     }
 
+    /**
+     * 获取成功连接的设备名称
+     * @param ctx
+     * @return 设备名称
+     */
     public static final String getDeviceNameInFile(Context ctx){
         String device_name = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).
                 getString(BLE_CONFIG_DEVICE_NAME, "");
         return device_name;
     }
 
+    /**
+     * 获取成功连接的设备MAC地址
+     * @param ctx
+     * @return MAC地址
+     */
     public static final String getDeviceMacInFile(Context ctx) {
         String device_mac = ctx.getSharedPreferences(BLE_CONFIG_FILE_NAME, Context.MODE_PRIVATE).
                 getString(BLE_CONFIG_DEVICE_MAC, "");

@@ -32,4 +32,6 @@ interface IBleOp {
     boolean hasConnectToDevice();
     void saveAutoReconnect(boolean reconnect_flag);
     boolean getAutoReconnect();
+    void saveAutoConnect(boolean auto_connect_flag);
+    boolean getAutoConnect();
 }
