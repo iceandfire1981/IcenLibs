@@ -465,10 +465,6 @@ public class BleManagerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         BleLogUtils.outputServiceLog("onBind::info= " + intent);
-        boolean auto_connect = intent.getBooleanExtra(BleLibsConfig.START_KEY_ENABLE_AUTO_CONNECT, BleLibsConfig.DEFAULT_ENABLED_AUTO_CONNECT);
-        BleLibsConfig.saveAutoConnectInFile(BleManagerService.this, auto_connect);
-        boolean auto_re_connect = intent.getBooleanExtra(BleLibsConfig.START_KEY_ENABLE_AUTO_RE_CONNECT, BleLibsConfig.DEFAULT_ENABLED_AUTO_RE_CONNECT);
-        BleLibsConfig.saveAutoReConnectInFile(BleManagerService.this, auto_re_connect);
         if (null == mBleOpImpl)
             mBleOpImpl = new BleOpImpl(this, mBluetoothGattCallback);
         return mBleOpImpl;
