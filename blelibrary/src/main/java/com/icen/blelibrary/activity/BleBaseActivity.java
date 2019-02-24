@@ -1,6 +1,7 @@
 package com.icen.blelibrary.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import com.icen.blelibrary.utils.BleLogUtils;
 
 import java.util.Arrays;
 
-public class BleBaseActivity extends AppCompatActivity
+public class BleBaseActivity extends Activity
                                       implements BleManagerCallBack {
 
     private static String[] REQUEST_PERMISSION = new String[]{
