@@ -17,7 +17,7 @@ import com.icen.blelibrary.utils.BleLogUtils;
 
 import java.util.Arrays;
 
-public class BleBaseActivity extends Activity
+public class BleBaseActivity extends AppCompatActivity
                                       implements BleManagerCallBack {
 
     private static String[] REQUEST_PERMISSION = new String[]{
