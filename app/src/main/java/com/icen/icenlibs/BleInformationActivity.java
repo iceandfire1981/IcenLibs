@@ -207,6 +207,7 @@ public class BleInformationActivity extends BleBaseActivity
         }
     }
 
+    private boolean mIsFirst = true;
     @Override
     public void onConnectDevice(boolean is_success, final String device_name, final String device_mac) {
         AppLogUtils.outputActivityLog("BleInformationActivity::onConnectDevice::is_success= " + is_success +
@@ -224,6 +225,11 @@ public class BleInformationActivity extends BleBaseActivity
                         mTVDeviceName.setText(device_name);
                         updateNServiceList();
                         updateRWServiceList();
+                        if (!mIsFirst){
+                            mBleManager.writeCharacteristic("00007102-0000-544c-8267-4c4442454144", 31, BluetoothGattCharacteristic.FORMAT_UINT8);
+                        } else {
+                            mIsFirst = false;
+                        }
 
                     }
                 });

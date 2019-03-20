@@ -68,6 +68,8 @@ public class BleManagerService extends Service {
     private boolean mAutoConnect, mAutoReConnect, mIsScanning;
     private long mScanOvertime;
 
+    private int mPreStatus, mPreState;
+
     private Handler mServiceHandler = new Handler();
 
     /**
@@ -181,7 +183,23 @@ public class BleManagerService extends Service {
          public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
              super.onConnectionStateChange(gatt, status, newState);
              BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
-                     " new_status= " + newState);
+                     " new_status= " + newState + " id= " + this);
+             if (mPreState == -99 && mPreStatus == -99) {
+                 BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+                         " new_status= " + newState + " initial");
+                 mPreState = newState;
+                 mPreStatus = status;
+             } else if (newState == mPreState && status == mPreStatus) {
+                 BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+                         " new_status= " + newState + " return");
+                return;
+             } else {
+                 BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
+                         " new_status= " + newState + " change");
+                 mPreState = newState;
+                 mPreStatus = status;
+             }
+
              if (BluetoothGatt.GATT_SUCCESS == status) {//操作成功
                 if (BluetoothProfile.STATE_CONNECTED == newState) {//外设连接成功
                     mCurrentGATT = gatt;
@@ -448,6 +466,8 @@ public class BleManagerService extends Service {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        mPreStatus = -99;
+        mPreState = -99;
     }
 
     @Override
@@ -990,6 +1010,10 @@ public class BleManagerService extends Service {
                 }
 
                 if (null != target_ch) {
+                    String propertie = BleCommonUtils.getCharPropertie(target_ch.getProperties());
+                    String permission = BleCommonUtils.getCharPropertie(target_ch.getPermissions());
+                    BleLogUtils.outputServiceLog("BleOpImpl::writeCharacteristic2::uuid= " + write_uuid +
+                            " content= " + write_content + " begin write: p_e= " + propertie + " per= " + permission);
                     target_ch.setValue(write_content, content_format, 0);
                     is_success = mCurrentGATT.writeCharacteristic(target_ch);
                 }
