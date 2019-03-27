@@ -184,6 +184,7 @@ public class BleManagerService extends Service {
              super.onConnectionStateChange(gatt, status, newState);
              BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
                      " new_status= " + newState + " id= " + this);
+             mCurrentGATT = gatt;
              if (mPreState == -99 && mPreStatus == -99) {
                  BleLogUtils.outputServiceLog("gatt_callback::onConnectionStateChange::status= " + status +
                          " new_status= " + newState + " initial");
@@ -884,17 +885,26 @@ public class BleManagerService extends Service {
 
         @Override
         public boolean disconnect() throws RemoteException {
-            BleLogUtils.outputServiceLog("BleOpImpl::disconnect::gatt= " + mCurrentGATT);
+            boolean is_success = false;
             if (null != mCurrentGATT) {
+                try {
+                    if (null != mBleOpCallback)
+                        mBleOpCallback.onConnectToDevice(false, mCurrentGATT.getDevice().getAddress(), "");
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
                 mCurrentGATT.disconnect();
-                //mCurrentGATT.close();
+                mCurrentGATT.close();
                 mCurrentGATT = null;
                 mAllChMap = null;
                 mBatteryCharacteristic = null;
-                return true;
-            } else {
-                return false;
+                is_success = true;
+
             }
+            mPreState = -99;
+            mPreStatus = -99;
+            BleLogUtils.outputServiceLog("BleOpImpl::disconnect::gatt= " + mCurrentGATT + " result= " + is_success);
+            return is_success;
         }
 
         @Override
